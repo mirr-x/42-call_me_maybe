@@ -1,3 +1,3 @@
-# call-me-maybe/parsers/__init__.py
+# call_me_maybe/parsers/__init__.py
 
-""" Parser utilities for handling different file formats. """
+""" Internal initialization for the call_me_maybe package. """

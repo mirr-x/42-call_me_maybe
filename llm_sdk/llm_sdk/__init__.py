@@ -14,18 +14,22 @@ logging.set_verbosity_error()  # keep the console clean
 
 
 class Small_LLM_Model:
-    """Utility class wrapping a lightweight Hugging Face causal-LM for fast, low-memory experimentation.
+    """Lightweight wrapper for Hugging Face causal language models.
 
-    Parameters
-    ----------
-    model_name: str, default="Qwen/Qwen3-0.6B"
-        Identifier of the model on the HF Hub.
-    device: str | None, default=None
-        Computation device. If *None* we automatically select ``mps`` when available on macOS,
-        ``cuda`` when available, otherwise we fall back to ``cpu``.
-    dtype: torch.dtype | None, default=None
-        Numerical precision. When using a GPU or MPS we default to ``float16`` to keep memory
-        usage reasonable; on CPU we keep ``float32`` for maximum compatibility.
+    This class simplifies loading a pretrained causal language model and its tokenizer from
+    the Hugging Face Hub and exposes small helper methods for tokenisation, decoding and
+    obtaining raw logits for the next token. It is designed for fast, low-memory experiments.
+
+    Args:
+        model_name (str): Hugging Face repository identifier for the model. Defaults to
+            ``"Qwen/Qwen3-0.6B"``.
+        device (str | None): Computation device. If ``None``, the class automatically
+            selects ``mps`` (macOS) or ``cuda`` when available, otherwise ``cpu``.
+        dtype (torch.dtype | None): Numeric precision for model weights. Defaults to
+            ``torch.float16`` on GPU/MPS and ``torch.float32`` on CPU when unspecified.
+        trust_remote_code (bool): Whether to allow and execute remote model code from the
+            model repository.
+
     """
 
     def __init__(
@@ -75,21 +79,45 @@ class Small_LLM_Model:
 
 
     def encode(self, text: str) -> torch.Tensor:
-        """Tokenise *text* and return a 2-D ``input_ids`` tensor on the target device."""
+        """Tokenize an input string and return input IDs as a tensor on the model device.
+
+        Args:
+            text (str): The text to tokenize.
+
+        Returns:
+            torch.Tensor: A 2-D tensor with shape ``(1, sequence_length)`` of type
+                ``torch.long`` placed on the configured device.
+        """
         ids = self._tokenizer.encode(text, add_special_tokens=False)
         return torch.tensor([ids], device=self._device, dtype=torch.long)
 
 
     def decode(self, ids: torch.Tensor | list[int]) -> str:
-        """Inverse of :py:meth:`encode`. Removes special tokens."""
+        """Convert token ids back to a readable string, removing special tokens.
+
+        Args:
+            ids (torch.Tensor | list[int]): Token ids as a 1-D list or a tensor. If a
+                tensor is provided it will be converted to a Python list.
+
+        Returns:
+            str: Decoded string with special tokens removed.
+        """
         if isinstance(ids, torch.Tensor):
             ids = ids.tolist()
         return self._tokenizer.decode(ids, skip_special_tokens=True)
 
 
     def get_logits_from_input_ids(self, input_ids: list[int]) -> list[float]:
-        """
-        Given a list of input token ids, return the raw logits (no softmax) for the next token.
+        """Return raw logits (pre-softmax) for the next token given input ids.
+
+        This runs the model in evaluation mode with gradients disabled. The method returns
+        the logits vector for the last position in the provided sequence.
+
+        Args:
+            input_ids (list[int]): A list of token ids representing a single input sequence.
+
+        Returns:
+            list[float]: A Python list containing the raw logits for the next token.
         """
         input_tensor = torch.tensor([input_ids], device=self._device, dtype=torch.long)
         with torch.no_grad():
@@ -100,6 +128,11 @@ class Small_LLM_Model:
 
 
     def get_path_to_vocab_file(self) -> str:
+        """Download and return the local path to the tokenizer vocab file.
+
+        Returns:
+            str: Local filesystem path to the downloaded vocab file for the tokenizer.
+        """
         vocab_file_name = self._tokenizer.vocab_files_names.get('vocab_file', "vocab.json")
         vocab_path = hf_hub_download(
             repo_id=self._model_name,
@@ -109,6 +142,11 @@ class Small_LLM_Model:
 
 
     def get_path_to_merges_file(self) -> str:
+        """Download and return the local path to the tokenizer merges file.
+
+        Returns:
+            str: Local filesystem path to the downloaded merges file (if applicable).
+        """
         merges_file_name = self._tokenizer.vocab_files_names.get('merges_file', "merges.txt")
         merges_path = hf_hub_download(
             repo_id=self._model_name,
@@ -118,6 +156,11 @@ class Small_LLM_Model:
 
 
     def get_path_to_tokenizer_file(self) -> str:
+        """Download and return the local path to the tokenizer JSON file.
+
+        Returns:
+            str: Local filesystem path to the tokenizer JSON file used by the tokenizer.
+        """
         tokenizer_file_name = self._tokenizer.vocab_files_names.get('tokenizer_file', "tokenizer.json")
         tokenizer_path = hf_hub_download(
             repo_id=self._model_name,

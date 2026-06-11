@@ -1,6 +1,6 @@
 """ fill me """
 
-from parsers import _errors
+from call_me_maybe.parsers import _errors
 
 
 def load_file(name: str) -> None:

@@ -1,16 +1,12 @@
 install:
-	pip install --upgrade pip
-	pip install mypy
-	pip install flake8
-	pip install pydantic
-	pip install pytest
+	uv sync
 
 
 run:
-	
+	uv run python -m call_me_maybe.main
 
 debug:
-	
+	uv run python -m pdb -m call_me_maybe.main
 
 clean:
 	find . -name '__pycache__' -exec rm -rf {} +

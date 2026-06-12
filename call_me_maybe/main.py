@@ -2,9 +2,29 @@
 
 import logging
 
+from call_me_maybe.parsers.parser import Parsing
+from call_me_maybe.parsers import _errors
+
+FUNCTIONS_FILE = 'data/input/functions_definition.json'
+PROMPT_FILE = 'data/input/function_calling_tests.json'
+
+
 def main() -> None:
     """ Main function for Call Me Maybe """
     logging.info("Call Me Maybe started\n")
+
+    try:
+        # Phase 0: Parsing
+        parsing = Parsing(
+            file_name_functions=FUNCTIONS_FILE,
+            file_name_prompt=PROMPT_FILE
+        )
+        parsing.run()
+
+    except _errors.ParserError as e:
+        logging.error('PARSING ERROR: {%s} : cause {%s}', e, e.__cause__)
+
+    print()
     logging.info("Program has Ended")
 
 

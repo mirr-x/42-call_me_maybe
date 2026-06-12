@@ -1,16 +1,15 @@
 """Define Prompt blueprint object."""
 
-class Prompt:
+from typing import Annotated
+from pydantic import BaseModel, Field, ConfigDict
+
+
+class Prompt(BaseModel):
     """Represents a prompt object for storing and managing prompt text."""
 
-    def __init__(self, prompt: str) -> None:
-        """Initialize a Prompt instance.
+    model_config = ConfigDict(extra='forbid')
 
-        Args:
-            prompt (str): The prompt text to store.
-        """
-
-        self.prompt = prompt
+    prompt: Annotated[str, Field(min_length=3, max_length=100)]
 
     def __repr__(self) -> str:
         return f'-> {self.prompt}'

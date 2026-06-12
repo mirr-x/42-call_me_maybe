@@ -11,6 +11,7 @@ debug:
 clean:
 	find . -name '__pycache__' -exec rm -rf {} +
 	find . -name '.mypy_cache' -exec rm -rf {} +
+	find . -name '.pytest_cache' -exec rm -rf {} +
 
 lint:
 	flake8 . --exclude .venv

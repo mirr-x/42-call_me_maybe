@@ -1,22 +1,19 @@
 """Output model for a prompt and function metadata."""
 
-from typing import Any
+from typing import Annotated, Any
+from pydantic import BaseModel, Field, ConfigDict
 
 from call_me_maybe.models.prompt import Prompt
 
 
-class OutputModel:
+class OutputModel(BaseModel):
     """Represents the final output structure."""
 
-    def __init__(self, prompt: Prompt, name: str, parameters: dict[str, Any]) -> None:
-        """Initialize the output model.
+    model_config = ConfigDict(extra='forbid')
 
-        Args:
-            prompt (Prompt): The prompt instance.
-            name (str): The function name.
-            parameters (dict[str, Any]): The function parameters.
-        """
+    prompt: Prompt
+    name: Annotated[str, Field(min_length=3, max_length=10)]
+    parameters: dict[str, Any]
 
-        self.prompt = prompt
-        self.name = name
-        self.parameters = parameters
+    def __repr__(self) -> str:
+        return f"-> {self.prompt}"

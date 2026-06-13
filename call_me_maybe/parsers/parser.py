@@ -27,10 +27,10 @@ class Parsing:
 
         self.file_name_functions = file_name_functions
         self.file_name_prompt = file_name_prompt
-        self.functions: list[FunctionDefinition]
-        self.prompts: list[Prompt]
+        self._functions: list[FunctionDefinition]
+        self._prompts: list[Prompt]
 
-    def run(self) -> tuple:
+    def run(self):
         """Load and validate the JSON files and store results.
 
         Returns:
@@ -49,7 +49,21 @@ class Parsing:
             self.functions = validate_functions(functions_list)
             self.prompts = validate_prompts(prompt_list)
 
-            return self.functions, self.prompts
-
         except pydantic.ValidationError as cause:
             raise _errors.ParserValidationError('Validation Error') from cause
+
+    def get_function(self) -> list[FunctionDefinition]:
+        """Get the validated function definitions.
+
+        Returns:
+            list[FunctionDefinition]: The validated function definitions.
+        """
+        return self.functions
+
+    def get_prompts(self) -> list[Prompt]:
+        """Get the validated prompt definitions.
+
+        Returns:
+            list[Prompt]: The validated prompt definitions.
+        """
+        return self.prompts

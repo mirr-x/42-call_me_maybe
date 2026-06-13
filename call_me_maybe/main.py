@@ -4,6 +4,7 @@ import logging
 
 from call_me_maybe.parsers.parser import Parsing
 from call_me_maybe.parsers import _errors
+from call_me_maybe.llm.model import LLModel
 
 FUNCTIONS_FILE = 'data/input/functions_definition.json'
 PROMPT_FILE = 'data/input/function_calling_tests.json'
@@ -14,15 +15,24 @@ def main() -> None:
     logging.info("Call Me Maybe started\n")
 
     try:
-        # Phase 0: Parsing
+        # Phase 1: Parsing
         parsing = Parsing(
             file_name_functions=FUNCTIONS_FILE,
             file_name_prompt=PROMPT_FILE
         )
         parsing.run()
+        # functions = parsing.get_function()
+        # prompts = parsing.get_prompts()
+
+        # Phase 2: Tokening
+        llm = LLModel(model_name='Qwen/Qwen3-0.6B')
+        txt = "hello world"
+        print(llm.encode_text(txt))
 
     except _errors.ParserError as e:
         logging.error('PARSING ERROR: {%s} : cause {%s}', e, e.__cause__)
+    except _errors.LLmModelError as e:
+        logging.error('LLM ERROR: {%s} : cause {%s}', e, e.__cause__)
 
     print()
     logging.info("Program has Ended")

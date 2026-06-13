@@ -27,8 +27,8 @@ class Parsing:
 
         self.file_name_functions = file_name_functions
         self.file_name_prompt = file_name_prompt
-        self._functions: list[FunctionDefinition]
-        self._prompts: list[Prompt]
+        self.functions: list[FunctionDefinition]
+        self.prompts: list[Prompt]
 
     def run(self):
         """Load and validate the JSON files and store results.

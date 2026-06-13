@@ -1,7 +1,7 @@
 """Internal error definitions for the parser."""
 
 
-class ParserError(Exception):
+class ParserError(Exception):  # Base -> ParserError
     """Custom parser error to inherit from Exception"""
 
 
@@ -32,3 +32,15 @@ class ParserInvalidValue(ParserError):
 class ParserValidationError(ParserError):
     """ParserValidationError inherit from ParserError: if validation failed
     in pydantic"""
+
+
+class LLmModelError(Exception):  # Base -> LLmModelErro
+    """Custom LLmModelError inherit from Exception"""
+
+
+class LLmModelLoadError(LLmModelError):
+    """LLmModelLoadError inherit from LLmModelError: if loading model failed"""
+
+
+class LLmModelEncodeError(LLmModelError):
+    """LLmModelEncodeError inherit from LLmModelError: if encoding failed"""

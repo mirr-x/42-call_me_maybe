@@ -30,11 +30,11 @@ class Parsing:
         self.functions: list[FunctionDefinition]
         self.prompts: list[Prompt]
 
-    def run(self):
+    def run(self) -> None:
         """Load and validate the JSON files and store results.
 
         Returns:
-            A tuple (functions, prompts) of validated objects.
+            None
 
         Raises:
             _errors.ParserValidationError: if validation fails.

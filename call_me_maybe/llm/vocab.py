@@ -1,13 +1,13 @@
-""" fill me """
+"""Vocabulary loading and lookup utilities."""
 
 from call_me_maybe.parsers import input_loader
 
 
 class VocabularyManager:
-    """ fill me """
+    """Manage token-to-id and id-to-token vocabulary mappings."""
 
     def __init__(self, vocab_path: str) -> None:
-        """ fill me"""
+        """Initialize the vocabulary manager from a JSON vocabulary file."""
 
         self.vocab_path = vocab_path
         self.id_to_token: dict[int, str] = {}
@@ -15,7 +15,7 @@ class VocabularyManager:
         self._load_vocabulary()
 
     def _load_vocabulary(self) -> None:
-        """_summary_"""
+        """Load vocabulary entries from the configured JSON file."""
 
         data = input_loader.load_json_file(self.vocab_path)
         for k, v in data:
@@ -24,33 +24,17 @@ class VocabularyManager:
                 self.token_to_id[v] = k
 
     def get_token_by_id(self, id_: int) -> str | None:
-        """_summary_
-
-        Args:
-            id_ (int): _description_
-
-        Returns:
-            str | None: _description_
-        """
+        """Return the token associated with an integer ID, if present."""
 
         return self.id_to_token.get(id_)
 
     def get_id_by_token(self, token: str) -> int | None:
-        """_summary_
 
-        Args:
-            token (str): _description_
-
-        Returns:
-            int | None: _description_
-        """
+        """Return the integer ID associated with a token, if present."""
 
         return self.token_to_id.get(token)
 
     def vocabulary_size(self) -> int:
-        """_summary_
+        """Return the number of loaded vocabulary entries."""
 
-        Returns:
-            int: _description_
-        """
         return len(self.id_to_token)

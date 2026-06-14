@@ -43,7 +43,10 @@ def main() -> None:
         logging.info('vocab path: %s\n', vocab_path)
 
         print()
-        logging.info('toooooooo -> %s', vocabularymanager.get_id_by_token('hello'))
+        logging.info('str to id -> %s', vocabularymanager.get_id_by_token('hello'))
+        logging.info('id to str -> %s', vocabularymanager.get_token_by_id(14990))
+        logging.info('vocabulary_size: %s', vocabularymanager.vocabulary_size())
+
         # logging.info('tokenizer path: %s', llm.get_tokenizer_path())
         # logging.info('tokenizer meges: %s', llm.get_merges_path())
 

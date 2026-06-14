@@ -1,4 +1,7 @@
-""" fill me """
+"""Wrapper around the project's LLM SDK providing a Small_LLM_Model
+adapter with convenience methods for encoding, decoding and accessing
+tokenizer/vocab file paths.
+"""
 
 import torch
 
@@ -7,10 +10,20 @@ from call_me_maybe.parsers import _errors
 
 
 class LLModel:
-    """ fill me """
+    """A thin wrapper exposing a small LLM model from llm_sdk."""
 
     def __init__(self, model_name: str = 'Qwen/Qwen3-0.6B') -> None:
-        """ fill me """
+        """Create and load a Small_LLM_Model instance.
+
+        Args:
+            model_name: The model identifier to load (e.g. a Hugging Face
+                repository path). Defaults to 'Qwen/Qwen3-0.6B'.
+
+        Raises:
+            _errors.LLmModelLoadError: If the model cannot be loaded due to
+                OS errors, runtime/device issues, or configuration/import
+                problems.
+        """
 
         try:
             self.small_llm_model = llm_sdk.Small_LLM_Model(
@@ -30,10 +43,78 @@ class LLModel:
             raise _errors.LLmModelLoadError(msg) from e
 
     def encode_text(self, text: str) -> torch.Tensor:
-        """ fill me """
+        """Encode text into a tensor of token ids.
+
+        Args:
+            text: Input string to encode.
+
+        Raises:
+            _errors.LLmModelEncodeError: If encoding fails for any reason.
+
+        Returns:
+            A torch.Tensor containing token ids representing the input text.
+        """
 
         try:
             return self.small_llm_model.encode(text=text)
         except Exception as e:
             msg = f'Unexpected error during encoding: {e}'
             raise _errors.LLmModelEncodeError(msg) from e
+
+    def decode_text(self, token_ids_tensor: torch.Tensor) -> str:
+        """Decode a tensor of token ids back to a string.
+
+        Args:
+            token_ids_tensor: Tensor containing token ids to decode.
+
+        Raises:
+            _errors.LLmModelEncodeError: If decoding fails for any reason.
+
+        Returns:
+            The decoded string.
+        """
+
+        try:
+            return self.small_llm_model.decode(ids=token_ids_tensor)
+        except Exception as e:
+            msg = f'Unexpected error during decoding: {e}'
+            raise _errors.LLmModelEncodeError(msg) from e
+
+    def get_all_next_token_logits(
+            self, token_ids_decoded: list[int]) -> list[float]:
+        """Return logits for the next-token prediction given input ids.
+
+        Args:
+            token_ids_decoded: List of token ids representing the input
+                sequence.
+
+        Returns:
+            A list or array-like of logits for the next-token prediction.
+        """
+
+        return self.small_llm_model.get_logits_from_input_ids(
+            token_ids_decoded)
+
+    def get_vocab_path(self) -> str:
+        """Return the filesystem path to the model's vocabulary file.
+
+        Returns:
+            Path to the vocab file as a string.
+        """
+        return self.small_llm_model.get_path_to_vocab_file()
+
+    def get_tokenizer_path(self) -> str:
+        """Return the filesystem path to the tokenizer file.
+
+        Returns:
+            Path to the tokenizer file as a string.
+        """
+        return self.small_llm_model.get_path_to_tokenizer_file()
+
+    def get_merges_path(self) -> str:
+        """Return the filesystem path to the merges file (if any).
+
+        Returns:
+            Path to the merges file as a string.
+        """
+        return self.small_llm_model.get_path_to_merges_file()

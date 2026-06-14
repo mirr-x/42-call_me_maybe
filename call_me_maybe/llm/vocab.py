@@ -18,10 +18,13 @@ class VocabularyManager:
         """Load vocabulary entries from the configured JSON file."""
 
         data = input_loader.load_json_file(self.vocab_path)
-        for k, v in data:
+        for k, v in data.items():
             if isinstance(k, int) and isinstance(v, str):
                 self.id_to_token[k] = v
                 self.token_to_id[v] = k
+            if isinstance(k, str) and isinstance(v, int):
+                self.id_to_token[v] = k
+                self.token_to_id[k] = v
 
     def get_token_by_id(self, id_: int) -> str | None:
         """Return the token associated with an integer ID, if present."""

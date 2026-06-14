@@ -1,11 +1,12 @@
 """Input loader for JSON files used by the parsers package."""
 
 import json
+from typing import Any
 
 from call_me_maybe.parsers import _errors
 
 
-def load_json_file(name: str) -> list:
+def load_json_file(name: str) -> Any:
     """Load a JSON file and return its parsed content.
 
     Args:

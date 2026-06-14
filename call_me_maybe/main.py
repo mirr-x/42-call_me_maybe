@@ -5,6 +5,7 @@ import logging
 from call_me_maybe.parsers.parser import Parsing
 from call_me_maybe.parsers import _errors
 from call_me_maybe.llm.model import LLModel
+from call_me_maybe.llm.vocab import VocabularyManager
 
 FUNCTIONS_FILE = 'data/input/functions_definition.json'
 PROMPT_FILE = 'data/input/function_calling_tests.json'
@@ -21,13 +22,34 @@ def main() -> None:
             file_name_prompt=PROMPT_FILE
         )
         parsing.run()
-        # functions = parsing.get_function()
-        # prompts = parsing.get_prompts()
+        functions = parsing.get_function()
+        prompts = parsing.get_prompts()
+        logging.info(
+            "Loaded %d functions and %d prompts",
+            len(functions),
+            len(prompts),
+        )
 
-        # Phase 2: Tokening
+        # Phase 2: Tokenizing -----------------------------
         llm = LLModel(model_name='Qwen/Qwen3-0.6B')
-        txt = "hello world"
-        print(llm.encode_text(txt))
+        txt = "hello my name"
+        encoded = llm.encode_text(txt)
+        logging.info('encoded text %s', encoded)
+        decoded = llm.decode_text(encoded)
+        logging.info('decoded token ids tensor obj: %s', decoded)
+
+        vocab_path = llm.get_vocab_path()
+        vocabularymanager = VocabularyManager(vocab_path=vocab_path)
+        logging.info('vocab path: %s\n', vocab_path)
+
+        print()
+        logging.info('toooooooo -> %s', vocabularymanager.get_id_by_token('hello'))
+        # logging.info('tokenizer path: %s', llm.get_tokenizer_path())
+        # logging.info('tokenizer meges: %s', llm.get_merges_path())
+
+        logists = llm.get_all_next_token_logits(encoded.tolist())
+        logging.info('logists len(): %s\n', len(logists))
+
 
     except _errors.ParserError as e:
         logging.error('PARSING ERROR: {%s} : cause {%s}', e, e.__cause__)

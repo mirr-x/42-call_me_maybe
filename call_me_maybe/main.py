@@ -6,6 +6,7 @@ from call_me_maybe.parsers.parser import Parsing
 from call_me_maybe.parsers import _errors
 from call_me_maybe.llm.model import LLModel
 from call_me_maybe.llm.vocab import VocabularyManager
+from call_me_maybe.llm.logits import LogitsProcessor
 
 FUNCTIONS_FILE = 'data/input/functions_definition.json'
 PROMPT_FILE = 'data/input/function_calling_tests.json'
@@ -32,27 +33,32 @@ def main() -> None:
 
         # Phase 2: Tokenizing -----------------------------
         llm = LLModel(model_name='Qwen/Qwen3-0.6B')
-        txt = "hello my name"
+        txt = "The capital of France is"
         encoded = llm.encode_text(txt)
         logging.info('encoded text %s', encoded)
         decoded = llm.decode_text(encoded)
         logging.info('decoded token ids tensor obj: %s', decoded)
 
+        print("\nTesting Vocab section----------------------------------")
         vocab_path = llm.get_vocab_path()
-        vocabularymanager = VocabularyManager(vocab_path=vocab_path)
+        vocabulary_manager = VocabularyManager(vocab_path=vocab_path)
         logging.info('vocab path: %s\n', vocab_path)
 
-        print()
-        logging.info('str to id -> %s', vocabularymanager.get_id_by_token('hello'))
-        logging.info('id to str -> %s', vocabularymanager.get_token_by_id(14990))
-        logging.info('vocabulary_size: %s', vocabularymanager.vocabulary_size())
+        logging.info('str to id -> %s', vocabulary_manager.get_id_by_token('hello'))
+        logging.info('id to str -> %s', vocabulary_manager.get_token_by_id(14990))
+        logging.info('vocabulary_size: %s', vocabulary_manager.vocabulary_size())
+        logits = llm.get_all_next_token_logits(encoded.tolist())
+        logging.info('logits len(): %s\n', len(logits))
 
-        # logging.info('tokenizer path: %s', llm.get_tokenizer_path())
-        # logging.info('tokenizer meges: %s', llm.get_merges_path())
-
-        logists = llm.get_all_next_token_logits(encoded.tolist())
-        logging.info('logists len(): %s\n', len(logists))
-
+        print("\nTesting logist section----------------------------------")
+        logist_procesing = LogitsProcessor(logits=logits)
+        best_token_index = logist_procesing.get_best_token(logits)
+        logging.info('best token indx is : %s', best_token_index)
+        logging.info('best token score is : %s', logist_procesing.get_token_score(best_token_index))
+        logging.info('best token val is : %s', vocabulary_manager.get_token_by_id(best_token_index))
+        best_10 = logist_procesing.get_top_k_tokens(10)
+        for i in best_10:
+            print(vocabulary_manager.get_token_by_id(i))
 
     except _errors.ParserError as e:
         logging.error('PARSING ERROR: {%s} : cause {%s}', e, e.__cause__)

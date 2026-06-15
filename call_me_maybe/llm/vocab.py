@@ -54,11 +54,6 @@ class VocabularyManager:
 
         return len(self.id_to_token)
 
-    def get_json_structure_tokens(self) -> list[str]:
-        """Return a list of JSON structural tokens used by the tokenizer."""
-
-        return ["{", "}", "[", "]", ":", ",", '"']
-
     def is_json_token(self, token: str) -> bool:
         """Return True if the given token is a JSON structural token."""
 

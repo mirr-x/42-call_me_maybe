@@ -4,7 +4,7 @@ This module exposes a small enumeration of supported primitive
 types so the rest of the codebase can refer to them reliably.
 """
 
-from enum import Enum
+from enum import Enum, auto
 
 
 class Types(Enum):
@@ -12,3 +12,14 @@ class Types(Enum):
 
     STRING = 'string'
     INTEGER = 'integer'
+
+
+class JsonState(Enum):
+    """JSON parsing state identifiers."""
+
+    START = auto()
+    WAITING_FOR_KEY = auto()
+    WAITING_FOR_COLON = auto()
+    WAITING_FOR_VALUE = auto()
+    WAITING_FOR_NEXT = auto()
+    DONE = auto()

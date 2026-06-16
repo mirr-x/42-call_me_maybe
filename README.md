@@ -1,8 +1,9 @@
-*This project has been created as part of the 42 curriculum by molahrac.*
+_This project has been created as part of the 42 curriculum by molahrac._
 
 # call me maybe
 
 ## Description
+
 call me maybe is a function-calling project for large language models. The goal is to read a natural-language request, select the most relevant function from the available function catalogue, and generate a strictly valid JSON object containing the chosen function name and its required parameters.
 
 The project is centered on constrained decoding. Instead of trusting the model to emit correct JSON on its own, the decoder filters the vocabulary token by token so that every generated sequence remains both syntactically valid JSON and compatible with the schema described in data/input/functions_definition.json.
@@ -15,7 +16,9 @@ The repository includes:
 4. llm_sdk, a small wrapper package used to interact with the provided model and vocabulary.
 
 ## Instructions
+
 ### Installation
+
 Install the Python dependencies required by the project with:
 
 ```bash
@@ -25,9 +28,11 @@ make install
 This installs the tooling used by the repository, including pytest, flake8, mypy, and pydantic.
 
 ### Execution
+
 Run the implementation entrypoint from the repository root once your solution is in place and the dependencies are installed. The program must read the input files, generate the function-calling results, and write them to data/output/function_calling_results.json.
 
 ### Validation
+
 Use the provided checks when developing:
 
 ```bash
@@ -37,6 +42,7 @@ make lint
 You can also run the project tests if you add or maintain them in your solution.
 
 ## Algorithm Explanation
+
 The core of the solution is schema-aware constrained decoding.
 
 1. Load and validate the function definitions from data/input/functions_definition.json.
@@ -50,6 +56,7 @@ The core of the solution is schema-aware constrained decoding.
 This approach guarantees that the output remains machine-readable and that parameter types match the function specification instead of relying on post-processing or prompt formatting alone.
 
 ## Design Decisions
+
 The implementation is designed around small, testable stages rather than one monolithic generation loop.
 
 The function catalogue is treated as the source of truth. No function names or parameter layouts are hardcoded, which keeps the solution compatible with changing test files during peer review.
@@ -59,6 +66,7 @@ JSON handling is strict. Missing files, malformed input, or schema mismatches sh
 The decoder works with token ids rather than plain text. That choice makes it possible to validate every candidate token against the vocabulary and preserve exact control over the generated structure.
 
 ## Performance Analysis
+
 Accuracy is the main benefit of this approach. Because invalid tokens are removed before selection, the resulting JSON is far more reliable than a prompt-only solution and is expected to remain valid even on difficult inputs.
 
 Speed is slightly reduced compared with unconstrained generation because each token requires extra schema checks and vocabulary filtering. That overhead is acceptable for this project because correctness and validity matter more than raw throughput.
@@ -66,6 +74,7 @@ Speed is slightly reduced compared with unconstrained generation because each to
 Reliability is high. The program does not depend on the model spontaneously formatting its answer correctly, and it can reject malformed input files early instead of producing unusable output.
 
 ## Challenges Faced
+
 The hardest part is balancing JSON validity with schema validity at token level. A token can be syntactically legal in JSON but still produce an invalid value for the expected type, so the decoder must track both structure and semantics.
 
 Another difficulty is numeric handling. The decoder must accept integers and floating-point values when the schema allows numbers, while still rejecting tokens that would create malformed literals.
@@ -73,6 +82,7 @@ Another difficulty is numeric handling. The decoder must accept integers and flo
 Missing or invalid input files are also important. The implementation needs to survive absent JSON files and broken content without crashing in an uncontrolled way.
 
 ## Testing Strategy
+
 Validation should cover both happy-path and failure-path behavior.
 
 1. Compare generated output against known prompts and expected function selections.
@@ -83,13 +93,14 @@ Validation should cover both happy-path and failure-path behavior.
 6. Run linting and static checks with make lint during development.
 
 ## Example Usage
+
 After installation, the project should be run from the repository root so it can access the input and output paths used by the subject.
 
 Example input prompt:
 
 ```json
 {
-	"prompt": "What is the sum of 2 and 3?"
+  "prompt": "What is the sum of 2 and 3?"
 }
 ```
 
@@ -97,18 +108,19 @@ Example output object:
 
 ```json
 {
-	"prompt": "What is the sum of 2 and 3?",
-	"name": "fn_add_numbers",
-	"parameters": {
-		"a": 2.0,
-		"b": 3.0
-	}
+  "prompt": "What is the sum of 2 and 3?",
+  "name": "fn_add_numbers",
+  "parameters": {
+    "a": 2.0,
+    "b": 3.0
+  }
 }
 ```
 
 The final program must write an array of such objects to data/output/function_calling_results.json.
 
 ## Resources
+
 Reference material used for this project includes:
 
 1. [Python json module documentation](https://docs.python.org/3/library/json.html)

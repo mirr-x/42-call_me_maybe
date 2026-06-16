@@ -1,14 +1,14 @@
-""" Call Me Maybe Entry Point """
+"""Call Me Maybe Entry Point"""
 
 import logging
 
-from call_me_maybe.parsers.parser import Parsing
-from call_me_maybe.parsers import _errors
-from call_me_maybe.llm.model import LLModel
 from call_me_maybe.llm.logits import LogitsProcessor
+from call_me_maybe.llm.model import LLModel
+from call_me_maybe.parsers import _errors
+from call_me_maybe.parsers.parser import Parsing
 
-FUNCTIONS_FILE = 'data/input/functions_definition.json'
-PROMPT_FILE = 'data/input/function_calling_tests.json'
+FUNCTIONS_FILE = "data/input/functions_definition.json"
+PROMPT_FILE = "data/input/function_calling_tests.json"
 
 
 def generate_text(llm: LLModel, prompt: str, max_steps: int = 50) -> str:
@@ -27,23 +27,22 @@ def generate_text(llm: LLModel, prompt: str, max_steps: int = 50) -> str:
         generated.append(next_token)
         text = llm.decode_text(input_ids.new_tensor([generated]))
 
-        print(f'STEP {step}')
-        print(f'TOKEN ID: {next_token}')
-        print(f'TOKEN SCORE: {token_score}')
-        print(f'CURRENT TEXT: {text}')
+        print(f"STEP {step}")
+        print(f"TOKEN ID: {next_token}")
+        print(f"TOKEN SCORE: {token_score}")
+        print(f"CURRENT TEXT: {text}")
 
     return text
 
 
 def main() -> None:
-    """ Main function for Call Me Maybe """
+    """Main function for Call Me Maybe"""
     logging.info("Call Me Maybe started\n")
 
     try:
         # Phase 1: Parsing
         parsing = Parsing(
-            file_name_functions=FUNCTIONS_FILE,
-            file_name_prompt=PROMPT_FILE
+            file_name_functions=FUNCTIONS_FILE, file_name_prompt=PROMPT_FILE
         )
         parsing.run()
         functions = parsing.get_function()
@@ -60,12 +59,12 @@ def main() -> None:
             return
 
         final_text = generate_text(llm, prompts[0].prompt, max_steps=50)
-        logging.info('Final generated text: %s', final_text)
+        logging.info("Final generated text: %s", final_text)
 
     except _errors.ParserError as e:
-        logging.error('PARSING ERROR: {%s} : cause {%s}', e, e.__cause__)
+        logging.error("PARSING ERROR: {%s} : cause {%s}", e, e.__cause__)
     except _errors.LLmModelError as e:
-        logging.error('LLM ERROR: {%s} : cause {%s}', e, e.__cause__)
+        logging.error("LLM ERROR: {%s} : cause {%s}", e, e.__cause__)
 
     print()
     logging.info("Program has Ended")
@@ -73,9 +72,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-        )
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
 
     try:
         main()

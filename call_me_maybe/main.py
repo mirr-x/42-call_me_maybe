@@ -2,8 +2,10 @@
 
 import logging
 
+import torch
 from call_me_maybe.llm.logits import LogitsProcessor
 from call_me_maybe.llm.model import LLModel
+# from call_me_maybe.llm.vocab import VocabularyManager
 from call_me_maybe.parsers import _errors
 from call_me_maybe.parsers.parser import Parsing
 
@@ -11,26 +13,20 @@ FUNCTIONS_FILE = "data/input/functions_definition.json"
 PROMPT_FILE = "data/input/function_calling_tests.json"
 
 
-def generate_text(llm: LLModel, prompt: str, max_steps: int = 50) -> str:
+def generate_text(llm: LLModel, prompt: str, max_steps: int) -> str:
     """Greedily generate text while printing each generation step."""
 
-    input_ids = llm.encode_text(prompt)
-    generated = input_ids.tolist()[0]
+    input_ids: list[int] = llm.encode_text(prompt)
 
+    generated = input_ids[0].tolist()
     text = llm.decode_text(input_ids)
-    for step in range(1, max_steps + 1):
-        logits = llm.get_all_next_token_logits(generated)
-        logits_processor = LogitsProcessor(logits=logits)
-        next_token = logits_processor.get_best_token()
-        token_score = logits_processor.get_token_score(next_token)
+    for _ in range(max_steps):
+        logits_for_next_token: list[float] = llm.get_all_next_tokens_logits(generated)
+        logits_processor = LogitsProcessor(logits=logits_for_next_token)
+        next_token_id: int = logits_processor.get_best_token()
 
-        generated.append(next_token)
-        text = llm.decode_text(input_ids.new_tensor([generated]))
-
-        print(f"STEP {step}")
-        print(f"TOKEN ID: {next_token}")
-        print(f"TOKEN SCORE: {token_score}")
-        print(f"CURRENT TEXT: {text}")
+        generated.append(next_token_id)
+        text = llm.decode_text(torch.tensor(generated))
 
     return text
 
@@ -54,11 +50,7 @@ def main() -> None:
         )
 
         llm = LLModel()
-        if not prompts:
-            logging.warning("No prompts available for generation")
-            return
-
-        final_text = generate_text(llm, prompts[0].prompt, max_steps=50)
+        final_text = generate_text(llm, "the sum of 2 and 1 is equals:", max_steps=30)
         logging.info("Final generated text: %s", final_text)
 
     except _errors.ParserError as e:

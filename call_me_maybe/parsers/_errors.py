@@ -44,3 +44,7 @@ class LLmModelLoadError(LLmModelError):
 
 class LLmModelEncodeError(LLmModelError):
     """LLmModelEncodeError inherit from LLmModelError: if encoding failed"""
+
+
+class LLmModelDecodeError(LLmModelError):
+    """LLmModelDecodeError inherit from LLmModelError: if decoding failed"""

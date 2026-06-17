@@ -1,14 +1,9 @@
 # ABOUTME: LLM SDK for local model inference using Hugging Face transformers.
 # ABOUTME: Provides Small_LLM_Model class for loading and running causal language models.
 
-import time
-from typing import Tuple
-
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel, logging
 from huggingface_hub import hf_hub_download
-import os
-
 
 logging.set_verbosity_error()  # keep the console clean
 
@@ -96,9 +91,6 @@ class Small_LLM_Model:
             out = self._model(input_ids=input_tensor)
         # Get logits for the last token in the sequence for the batch (batch size 1)
         logits = out.logits[0, -1].tolist()
-        with open('logits_debug.txt', 'w') as f:
-            f.write(f"Input IDs: {input_ids}\n")
-            f.write(f"Logits: {logits}\n")
         return [float(x) for x in logits]
 
 

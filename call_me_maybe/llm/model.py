@@ -5,14 +5,14 @@ tokenizer/vocab file paths.
 
 import torch
 
-from llm_sdk import llm_sdk
 from call_me_maybe.parsers import _errors
+from llm_sdk import Small_LLM_Model
 
 
 class LLModel:
     """A thin wrapper exposing a small LLM model from llm_sdk."""
 
-    def __init__(self, model_name: str = 'Qwen/Qwen3-0.6B') -> None:
+    def __init__(self, model_name: str = "Qwen/Qwen3-0.6B") -> None:
         """Create and load a Small_LLM_Model instance.
 
         Args:
@@ -26,20 +26,20 @@ class LLModel:
         """
 
         try:
-            self.small_llm_model = llm_sdk.Small_LLM_Model(
+            self.small_llm_model = Small_LLM_Model(
                 model_name=model_name,
                 device=None,  # docs says -> picks mps, then cuda, then cpu
                 dtype=None,  # float32 or float16 for weights accurate
                 trust_remote_code=True,  # allow custom code from model repo
             )
         except OSError as e:
-            msg = f'Failed to load model: {e}'
+            msg = f"Failed to load model: {e}"
             raise _errors.LLmModelLoadError(msg) from e
         except RuntimeError as e:
-            msg = f'Device or CUDA error during model load: {e}'
+            msg = f"Device or CUDA error during model load: {e}"
             raise _errors.LLmModelLoadError(msg) from e
         except (ValueError, ImportError) as e:
-            msg = f'Configuration error during model load: {e}'
+            msg = f"Configuration error during model load: {e}"
             raise _errors.LLmModelLoadError(msg) from e
 
     def encode_text(self, text: str) -> torch.Tensor:
@@ -58,7 +58,7 @@ class LLModel:
         try:
             return self.small_llm_model.encode(text=text)
         except Exception as e:
-            msg = f'Unexpected error during encoding: {e}'
+            msg = f"Unexpected error during encoding: {e}"
             raise _errors.LLmModelEncodeError(msg) from e
 
     def decode_text(self, token_ids_tensor: torch.Tensor) -> str:
@@ -68,7 +68,7 @@ class LLModel:
             token_ids_tensor: Tensor containing token ids to decode.
 
         Raises:
-            _errors.LLmModelEncodeError: If decoding fails for any reason.
+            _errors.LLmModelDecodeError: If decoding fails for any reason.
 
         Returns:
             The decoded string.
@@ -77,11 +77,10 @@ class LLModel:
         try:
             return self.small_llm_model.decode(ids=token_ids_tensor)
         except Exception as e:
-            msg = f'Unexpected error during decoding: {e}'
-            raise _errors.LLmModelEncodeError(msg) from e
+            msg = f"Unexpected error during decoding: {e}"
+            raise _errors.LLmModelDecodeError(msg) from e
 
-    def get_all_next_token_logits(
-            self, token_ids_decoded: list[int]) -> list[float]:
+    def get_all_next_tokens_logits(self, token_ids_encoded: list[int]) -> list[float]:
         """Return logits for the next-token prediction given input ids.
 
         Args:
@@ -91,9 +90,7 @@ class LLModel:
         Returns:
             A list or array-like of logits for the next-token prediction.
         """
-
-        return self.small_llm_model.get_logits_from_input_ids(
-            token_ids_decoded)
+        return self.small_llm_model.get_logits_from_input_ids(token_ids_encoded)
 
     def get_vocab_path(self) -> str:
         """Return the filesystem path to the model's vocabulary file.
@@ -102,19 +99,3 @@ class LLModel:
             Path to the vocab file as a string.
         """
         return self.small_llm_model.get_path_to_vocab_file()
-
-    def get_tokenizer_path(self) -> str:
-        """Return the filesystem path to the tokenizer file.
-
-        Returns:
-            Path to the tokenizer file as a string.
-        """
-        return self.small_llm_model.get_path_to_tokenizer_file()
-
-    def get_merges_path(self) -> str:
-        """Return the filesystem path to the merges file (if any).
-
-        Returns:
-            Path to the merges file as a string.
-        """
-        return self.small_llm_model.get_path_to_merges_file()

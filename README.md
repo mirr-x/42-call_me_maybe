@@ -124,12 +124,12 @@ The final program must write an array of such objects to data/output/function_ca
 Reference material used for this project includes:
 
 1. [Python json module documentation](https://docs.python.org/3/library/json.html)
-2. [Python pathlib documentation](https://docs.python.org/3/library/pathlib.html)
-3. [Python typing documentation](https://docs.python.org/3/library/typing.html)
-4. [Pydantic documentation](https://docs.pydantic.dev/latest/)
-5. [Hugging Face Transformers documentation](https://huggingface.co/docs/transformers/index)
-6. [The 42 subject PDF](en.subject.pdf)
-7. [Function definitions input](data/input/functions_definition.json)
-8. [Function calling test set](data/input/function_calling_tests.json)
+2. [constrained decoding](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output)
+3. [Pydantic documentation](https://docs.pydantic.dev/latest/)
+4. [Hugging Face Transformers documentation](https://huggingface.co/docs/transformers/index)
+5. [The 42 subject PDF](en.subject.pdf)
+6. [Function definitions input](data/input/functions_definition.json)
+7. [Function calling test set](data/input/function_calling_tests.json)
+8. [Main FSM engein for constrained decoding](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output#from-schema-to-grammar)
 
 AI was used to refine this README structure, improve clarity, and ensure the required sections were covered in English. It was not used to replace the project logic or the constrained decoding design, which must be implemented in code.

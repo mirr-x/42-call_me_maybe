@@ -43,18 +43,41 @@ class VocabularyManager:
 
         return self.id_to_token.get(id_, "<UNK>")
 
+    @staticmethod
+    def _display_token(token: str) -> str:
+        """Convert tokenizer-specific markers into a more readable token."""
+
+        if token.startswith("Ġ"):
+            return token[1:]
+        return token
+
+    def get_display_token_by_id(self, id_: int) -> str:
+        """Return a human-readable token for display/debugging."""
+
+        return self._display_token(self.get_token_by_id(id_))
+
     def get_id_by_token(self, token: str) -> int:
 
         """Return the integer ID associated with a token, if present."""
 
         return self.token_to_id.get(token, -1)
 
+    def inspect_token(self, token_id: int) -> str:
+        """Format a single vocabulary entry for debugging."""
+
+        token = self.get_token_by_id(token_id)
+        return (
+            f"TOKEN ID: {token_id}\n"
+            f"TOKEN: {self.get_display_token_by_id(token_id)}\n"
+            f"RAW TOKEN: {token}"
+        )
+
+    def inspect_tokens(self, token_ids: list[int]) -> list[str]:
+        """Format multiple vocabulary entries for debugging."""
+
+        return [self.inspect_token(token_id) for token_id in token_ids]
+
     def vocabulary_size(self) -> int:
         """Return the number of loaded vocabulary entries."""
 
         return len(self.id_to_token)
-
-    def is_json_token(self, token: str) -> bool:
-        """Return True if the given token is a JSON structural token."""
-
-        return token in self.get_json_structure_tokens()

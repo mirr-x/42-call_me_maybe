@@ -17,9 +17,12 @@ class Types(Enum):
 class JsonState(Enum):
     """JSON parsing state identifiers."""
 
-    START = auto()
-    WAITING_FOR_KEY = auto()
-    WAITING_FOR_COLON = auto()
-    WAITING_FOR_VALUE = auto()
-    WAITING_FOR_NEXT = auto()
-    DONE = auto()
+    START_OBJECT = 'start_object'
+    START = 'start'
+
+    NAME = 'name'
+    STRING = 'string'
+    END_KEY = 'end_key'
+    NUMBER = 'number'
+    COLON = 'colon'
+    END = 'end'

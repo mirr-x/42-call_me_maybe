@@ -65,7 +65,7 @@ def main() -> None:
         )
 
         llm = LLModel()
-        final_text = generate_text(llm, "what is the sum of 1 and 2 ? the ouput is in json format only key and val :", max_steps=30)
+        final_text = generate_text(llm, "what is the sum of 1 and 2 ?", max_steps=30)
         logging.info("Final generated text: %s", final_text)
 
     except _errors.ParserError as e:

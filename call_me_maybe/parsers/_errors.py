@@ -48,3 +48,9 @@ class LLmModelEncodeError(LLmModelError):
 
 class LLmModelDecodeError(LLmModelError):
     """LLmModelDecodeError inherit from LLmModelError: if decoding failed"""
+
+class FinitStateMachineError(Exception):  # Base -> FinitStateMachineError
+    """Custom FsmError inherit from Exception"""
+
+class FsmPredectionError(FinitStateMachineError):
+    """FsmPredectionError inherit from FinitStateMachineError: if predction is wrong"""

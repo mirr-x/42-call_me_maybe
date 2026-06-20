@@ -17,80 +17,19 @@ The repository includes:
 
 ## Instructions
 
-### Installation
 
-Install the Python dependencies required by the project with:
-
-```bash
-make install
+### engine Algo for gen valid tokens
+```python
+tokenize prompt → input_ids
+loop:
+    logits = llm_sdk.get_logits_from_input_ids(input_ids)
+    legal_ids = constraints.get_legal_tokens(current_state, schema)
+    masked_logits = mask(logits, legal_ids)
+    next_token = pick(masked_logits)
+    input_ids.append(next_token)
+    state_machine.advance(next_token_text)
+until state_machine says "done"
 ```
-
-This installs the tooling used by the repository, including pytest, flake8, mypy, and pydantic.
-
-### Execution
-
-Run the implementation entrypoint from the repository root once your solution is in place and the dependencies are installed. The program must read the input files, generate the function-calling results, and write them to data/output/function_calling_results.json.
-
-### Validation
-
-Use the provided checks when developing:
-
-```bash
-make lint
-```
-
-You can also run the project tests if you add or maintain them in your solution.
-
-## Algorithm Explanation
-
-The core of the solution is schema-aware constrained decoding.
-
-1. Load and validate the function definitions from data/input/functions_definition.json.
-2. Read the prompts from the test input file.
-3. Build the expected JSON structure for each answer: prompt, name, and parameters.
-4. At each generation step, inspect the current partial output and determine which JSON tokens are allowed next.
-5. Use the vocabulary JSON provided by the SDK to map token ids to their string forms, then mask out tokens that would break JSON syntax or violate the function schema.
-6. Select only among the remaining valid tokens until the object is complete.
-7. Parse and validate the final JSON before writing the output file.
-
-This approach guarantees that the output remains machine-readable and that parameter types match the function specification instead of relying on post-processing or prompt formatting alone.
-
-## Design Decisions
-
-The implementation is designed around small, testable stages rather than one monolithic generation loop.
-
-The function catalogue is treated as the source of truth. No function names or parameter layouts are hardcoded, which keeps the solution compatible with changing test files during peer review.
-
-JSON handling is strict. Missing files, malformed input, or schema mismatches should be handled explicitly so the program fails safely instead of emitting partial or invalid output.
-
-The decoder works with token ids rather than plain text. That choice makes it possible to validate every candidate token against the vocabulary and preserve exact control over the generated structure.
-
-## Performance Analysis
-
-Accuracy is the main benefit of this approach. Because invalid tokens are removed before selection, the resulting JSON is far more reliable than a prompt-only solution and is expected to remain valid even on difficult inputs.
-
-Speed is slightly reduced compared with unconstrained generation because each token requires extra schema checks and vocabulary filtering. That overhead is acceptable for this project because correctness and validity matter more than raw throughput.
-
-Reliability is high. The program does not depend on the model spontaneously formatting its answer correctly, and it can reject malformed input files early instead of producing unusable output.
-
-## Challenges Faced
-
-The hardest part is balancing JSON validity with schema validity at token level. A token can be syntactically legal in JSON but still produce an invalid value for the expected type, so the decoder must track both structure and semantics.
-
-Another difficulty is numeric handling. The decoder must accept integers and floating-point values when the schema allows numbers, while still rejecting tokens that would create malformed literals.
-
-Missing or invalid input files are also important. The implementation needs to survive absent JSON files and broken content without crashing in an uncontrolled way.
-
-## Testing Strategy
-
-Validation should cover both happy-path and failure-path behavior.
-
-1. Compare generated output against known prompts and expected function selections.
-2. Parse the produced file with a strict JSON parser to confirm there are no syntax errors.
-3. Check that every result contains exactly the required keys and no extras.
-4. Verify that argument values match the declared types in functions_definition.json.
-5. Test malformed JSON input and missing-file scenarios to confirm graceful error handling.
-6. Run linting and static checks with make lint during development.
 
 ## Example Usage
 
@@ -115,6 +54,11 @@ Example output object:
     "b": 3.0
   }
 }
+```
+```json
+{   -> JsonState.START_OBJECT
+  ":JsonState.START_KEY   ft_function:JsonState.STRING.  ":END_KEY : -> JsonState.COLON
+
 ```
 
 The final program must write an array of such objects to data/output/function_calling_results.json.

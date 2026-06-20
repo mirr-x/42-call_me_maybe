@@ -3,7 +3,7 @@ install:
 
 
 run:
-	uv run python -m call_me_maybe.main
+	uv run python -m call_me_maybe
 
 debug:
 	uv run python -m pdb -m call_me_maybe.main

@@ -14,15 +14,24 @@ class Types(Enum):
     INTEGER = 'integer'
 
 
-class JsonState(Enum):
+class JSONState(Enum):
     """JSON parsing state identifiers."""
 
-    START_OBJECT = 'start_object'
-    START = 'start'
+    START         = auto()  # nothing generated yet
+    OBJECT_START  = auto()  # just saw {
 
-    NAME = 'name'
-    STRING = 'string'
-    END_KEY = 'end_key'
-    NUMBER = 'number'
-    COLON = 'colon'
-    END = 'end'
+    KEY_OPEN      = auto()  # just saw opening " of a key
+    KEY_BODY      = auto()  # inside the key string characters
+    KEY_CLOSE     = auto()  # just saw closing " of a key
+
+    COLON         = auto()  # just saw :
+
+    VALUE_STRING_OPEN  = auto()  # just saw opening " of a string value
+    VALUE_STRING_BODY  = auto()  # inside the string value characters
+    VALUE_STRING_CLOSE = auto()  # just saw closing " of a string value
+
+    VALUE_NUMBER  = auto()  # generating a number value (digits)
+
+    COMMA         = auto()  # just saw , — next key coming
+    OBJECT_END    = auto()  # just saw }
+    DONE          = auto()  # generation complete

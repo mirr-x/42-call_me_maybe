@@ -47,8 +47,9 @@ class VocabularyManager:
     def _display_token(token: str) -> str:
         """Convert tokenizer-specific markers into a more readable token."""
 
-        if token.startswith("Ġ"):
-            return token[1:]
+        leading_space_markers = len(token) - len(token.lstrip("Ġ"))
+        if leading_space_markers:
+            return (" " * leading_space_markers) + token[leading_space_markers:]
         return token
 
     def get_display_token_by_id(self, id_: int) -> str:

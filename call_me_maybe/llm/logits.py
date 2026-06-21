@@ -1,6 +1,6 @@
 """Logits processing utilities for language model output."""
 
-import numpy as np
+import torch
 
 
 class LogitsProcessor:
@@ -8,7 +8,7 @@ class LogitsProcessor:
 
     def __init__(self, logits: list[float]) -> None:
 
-        self.logits = np.array(logits)
+        self.logits = torch.tensor(logits)
 
     def get_best_token(self) -> int:
         """Get the token ID with the highest logit score.
@@ -17,7 +17,7 @@ class LogitsProcessor:
             int: The index of the token with the maximum logit value
         """
 
-        return int(np.argmax(self.logits))
+        return torch.argmax(self.logits).item()
 
     def get_top_k_tokens(self, k: int) -> list[int]:
         """Get the token IDs with the top k highest logit scores.
@@ -29,7 +29,7 @@ class LogitsProcessor:
             list[int]: List of token IDs sorted by logit score in descend order
         """
 
-        top_k_indices = np.argsort(self.logits)[::-1][:k]
+        _, top_k_indices = torch.topk(self.logits, k)
 
         return top_k_indices.tolist()
 
@@ -43,28 +43,25 @@ class LogitsProcessor:
             float: The logit score of the specified token
         """
 
-        return self.logits[token_id]
+        return self.logits[token_id].item()
 
-    def mask_tokens(self, invalid_token_ids: list[int]) -> np.ndarray:
-        """Apply masking to invalid tokens by setting their logits to -inf.
+    def mask_logits(self, allowed_tokens: set[int]) -> None:
+        """Apply masking to tokens by setting logits for disallowed token IDs to -inf.
 
         Args:
-            invalid_token_ids (list[int]): List of token IDs to mask
+            allowed_tokens (set[int]): Set of token IDs that remain unmasked.
 
         Returns:
-            np.ndarray: New logits array with masked tokens set to -inf
+            None: The logits tensor is modified in place.
         """
 
-        logits_copy = self.logits.copy()
-        vocab_size = logits_copy.shape[0]
-        valid_token_ids = [
-            token_id
-            for token_id in invalid_token_ids
-            if isinstance(token_id, (int, np.integer)) and
-            0 <= token_id < vocab_size
-        ]
+        allowed = self.logits.new_tensor(list(allowed_tokens), dtype=torch.long)
 
-        if valid_token_ids:
-            for id_ in valid_token_ids:
-                logits_copy[id_] = float("-inf")
-        return logits_copy
+        mask = torch.ones_like(self.logits, dtype=torch.bool)
+        mask[allowed] = False
+
+        self.logits.masked_fill_(mask, float("-inf"))
+
+
+
+# TODO: needs testing to see if they raly seted to -inf and other not 

@@ -22,7 +22,6 @@
 
 
 from call_me_maybe._types._types import JSONState
-from call_me_maybe.models.function import FunctionDefinition
 from call_me_maybe.parsers import _errors
 
 
@@ -32,22 +31,37 @@ class JSONStateMachine:
     def __init__(self) -> None:
 
         self.state = JSONState.START
-        self.current_key = ""
         self._key_buffer = ""
-        self.functions: list[FunctionDefinition] = None
+        self.current_key = ""
 
     def reset(self) -> None:
         """Reset the state machine to initial state."""
+
         self.state = JSONState.START
-        self.current_key = ""
         self._key_buffer = ""
+        self.current_key = ""
 
     def get_state(self) -> JSONState:
         """Get the current parsing state."""
         return self.state
 
     def update_state(self, token: str) -> None:
-        """ update the status of that next token could be based on the input token """
+        """update the status of that next token could be based on the input token
+
+
+        Args:
+            token (str): _description_
+
+        Raises:
+            _errors.FsmPredectionError: _description_
+            _errors.FsmPredectionError: _description_
+            _errors.FsmPredectionError: _description_
+            _errors.FsmPredectionError: _description_
+            _errors.FsmPredectionError: _description_
+            _errors.FsmPredectionError: _description_
+            _errors.FsmPredectionError: _description_
+            ValueError: _description_
+        """
 
         token = (token.strip()).lstrip('\n')
         if token == '':

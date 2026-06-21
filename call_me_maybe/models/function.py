@@ -37,7 +37,9 @@ class Parameter(BaseModel):
         raise _errors.ParserValidationError(f'Invalid parameter type {type_}')
 
     def __repr__(self) -> str:
-        return f"-> {self.name}"
+        """Return a concise, readable representation of the Parameter."""
+        type_name = getattr(self.type_, 'name', str(self.type_)).lower()
+        return f"<Parameter name='{self.name}' type='{type_name}'>"
 
 
 class FunctionDefinition(BaseModel):
@@ -74,4 +76,10 @@ class FunctionDefinition(BaseModel):
         raise _errors.ParserValidationError(f'Invalid return type {return_}')
 
     def __repr__(self) -> str:
-        return f"-> {self.name}"
+        """Return a readable representation of the FunctionDefinition."""
+        params = ", ".join(p.name for p in self.parameters)
+        return_type = getattr(self.return_, 'name', str(self.return_)).lower()
+        return (
+            f"<Function name='{self.name}' description='{self.description}' "
+            f"parameters=[{params}] return='{return_type}'>"
+        )

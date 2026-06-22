@@ -28,6 +28,7 @@ User Query:
 Response (JSON only):
 """
 
+
 def get_allowed_tokens_ids(llm: LLModel, allowed_tikens: set[str]) -> set[int]:
     """Convert allowed token strings into token ids.
 
@@ -55,10 +56,11 @@ def creat_sys_prompt(prompt: str, functions: list[FunctionDefinition]) -> str:
 
     return SYSTEM_PROMPT.format(functions_block=functions_block, prompt=prompt)
 
+
 def generate_text(llm: LLModel, prompt: str, max_steps: int) -> str:
     """Greedily generate text while printing each generation step."""
 
-    input_ids: list[int] = llm.encode_text(prompt)
+    input_ids = llm.encode_text(prompt)
 
     generated = input_ids[0].tolist()
     vocab_manager = VocabularyManager(llm.get_vocab_path())
@@ -112,7 +114,7 @@ def main() -> None:
         prompt = 'what is the sum of 1 and 2 ?'
         llm = LLModel()
         system_prompt = creat_sys_prompt(prompt, functions)
-        final_text = generate_text(llm, prompt=system_prompt, max_steps=100)
+        final_text = generate_text(llm, prompt=system_prompt, max_steps=300)
         with open('model2.json', 'w+', encoding='utf-8') as f:
             f.write(final_text)
         logging.info("Final generated text: %s", final_text)

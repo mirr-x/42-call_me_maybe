@@ -55,13 +55,13 @@ class LogitsProcessor:
             None: The logits tensor is modified in place.
         """
 
-        allowed = self.logits.new_tensor(list(allowed_tokens), dtype=torch.long)
+        allowed = self.logits.new_tensor(
+            list(allowed_tokens),
+            dtype=torch.long
+        )
 
         mask = torch.ones_like(self.logits, dtype=torch.bool)
         mask[allowed] = False
 
         self.logits.masked_fill_(mask, float("-inf"))
 
-
-
-# TODO: needs testing to see if they raly seted to -inf and other not 

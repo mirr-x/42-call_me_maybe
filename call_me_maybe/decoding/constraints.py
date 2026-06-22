@@ -35,7 +35,7 @@ class ConstraintEngine:
         elif state == JSONState.OBJECT_START:
             return {'"'}
         elif state == JSONState.KEY_OPEN:
-            return {'name'} # magic shit
+            return set('abcdefghijklmnopqrstuvwxyz') #return {'name'} # magic shit
         elif state == JSONState.KEY_BODY: #we wont need it for now
             return {'"'}
         elif state == JSONState.KEY_CLOSE:
@@ -44,7 +44,7 @@ class ConstraintEngine:
             # return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '"'} after wanting full for now we only nee dname function
             return {'"'}
         elif state == JSONState.VALUE_STRING_OPEN:
-            return {'f', 'n', 'fn'} # later change it to.  set('abcdefghijklmnopqrstuvwxyz_') 
+            return set('abcdefghijklmnopqrstuvwxyz_')  # later change it to.  {'f', 'n', 'fn', 'a'}
         elif state == JSONState.VALUE_STRING_BODY:
             return set('abcdefghijklmnopqrstuvwxyz_"')
         elif state == JSONState.VALUE_STRING_CLOSE:

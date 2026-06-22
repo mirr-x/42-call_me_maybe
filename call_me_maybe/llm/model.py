@@ -80,7 +80,8 @@ class LLModel:
             msg = f"Unexpected error during decoding: {e}"
             raise _errors.LLmModelDecodeError(msg) from e
 
-    def get_all_next_tokens_logits(self, token_ids_encoded: list[int]) -> list[float]:
+    def get_all_next_tokens_logits(
+        self, token_ids_encoded: list[int]) -> list[float]:
         """Return logits for the next-token prediction given input ids.
 
         Args:
@@ -90,7 +91,8 @@ class LLModel:
         Returns:
             A list or array-like of logits for the next-token prediction.
         """
-        return self.small_llm_model.get_logits_from_input_ids(token_ids_encoded)
+        return self.small_llm_model.get_logits_from_input_ids(
+            token_ids_encoded)
 
     def get_vocab_path(self) -> str:
         """Return the filesystem path to the model's vocabulary file.

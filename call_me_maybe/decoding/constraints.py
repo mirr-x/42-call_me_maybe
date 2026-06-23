@@ -14,47 +14,44 @@ class ConstraintEngine:
         """Initialize the constraint engine."""
 
     def filter_logits(
-            self, current_state: JSONStateMachine) -> set[str]:
-        """Return a set of allowed next characters given the current JSON state.
+            self, current_state: JSONStateMachine, current_best_token: str
+            ) -> set[str] | None:
+        """Return a set of allowed next token text strings given the current JSON state.
 
 
         Args:
             current_state (JSONStateMachine): The current JSON state machine instance
-            functions (list[FunctionDefinition]): List of function definitions to constrain against
+            current_best_token (str): The best token text
 
         Returns:
-            set[str]: Set of allowed next characters
+            set[str] | None: Set of allowed next token strings, or None if no constraints are applied.
         """
 
         state = current_state.get_state()
-        leading_whitespace = {' ', '\n'}
 
         if state == JSONState.START:
-            # current_state.update_state('{')
             return {'{'}
         elif state == JSONState.OBJECT_START:
             return {'"'}
-        elif state == JSONState.KEY_OPEN:
-            return set('abcdefghijklmnopqrstuvwxyz') #return {'name'} # magic shit
-        elif state == JSONState.KEY_BODY: #we wont need it for now
+        elif state == JSONState.EXPECT_NAME_KEY:
+            return {'name'}
+        elif state == JSONState.KEY_BODY:
             return {'"'}
         elif state == JSONState.KEY_CLOSE:
             return {':'}
         elif state == JSONState.COLON:
-            # return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '"'} after wanting full for now we only nee dname function
             return {'"'}
         elif state == JSONState.VALUE_STRING_OPEN:
-            return set('abcdefghijklmnopqrstuvwxyz_')  # later change it to.  {'f', 'n', 'fn', 'a'}
+            return None
         elif state == JSONState.VALUE_STRING_BODY:
-            return set('abcdefghijklmnopqrstuvwxyz_"')
+            if '"' in current_best_token:
+                return {'"'}
+            return None
         elif state == JSONState.VALUE_STRING_CLOSE:
             return {',', '}'}
         elif state == JSONState.VALUE_NUMBER:
             return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '"'}
         elif state == JSONState.COMMA:
             return {'"'}
-        # elif state == JSONState.OBJECT_END:
-        #     return leading_whitespace
 
-        # default: no constraints
-        return set()
+        return None

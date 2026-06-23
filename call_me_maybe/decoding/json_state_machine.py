@@ -4,8 +4,8 @@
 # state              | token seen     | next state
 # --------------------------------------------------------
 # START              | {              | OBJECT_START
-# OBJECT_START       | "              | KEY_OPEN
-# KEY_OPEN           | any word chars | KEY_BODY
+# OBJECT_START       | "              | EXPECT_NAME_KEY
+# EXPECT_NAME_KEY           | any word chars | KEY_BODY
 # KEY_BODY           | "              | KEY_CLOSE
 # KEY_CLOSE          | :              | COLON
 # COLON              | "              | VALUE_STRING_OPEN
@@ -17,7 +17,7 @@
 # VALUE_NUMBER       | digit / .      | VALUE_NUMBER  (self-loop)
 # VALUE_NUMBER       | ,              | COMMA
 # VALUE_NUMBER       | }              | OBJECT_END
-# COMMA              | "              | KEY_OPEN
+# COMMA              | "              | EXPECT_NAME_KEY
 # OBJECT_END         | (nothing)      | DONE
 
 
@@ -32,14 +32,14 @@ class JSONStateMachine:
 
         self.state = JSONState.START
         self._key_buffer = ""
-        self.current_key = ""
+        self.current_value = ""
 
     def reset(self) -> None:
         """Reset the state machine to initial state."""
 
         self.state = JSONState.START
         self._key_buffer = ""
-        self.current_key = ""
+        self.current_value = ""
 
     def get_state(self) -> JSONState:
         """Get the current parsing state."""
@@ -76,12 +76,12 @@ class JSONStateMachine:
         elif self.state == JSONState.OBJECT_START:
             if token == '"':
                 self._key_buffer = ""
-                self.state = JSONState.KEY_OPEN
+                self.state = JSONState.EXPECT_NAME_KEY
             else:
                 msg = f"Wrong prediction by llm Expected '\"', got {token!r}"
                 raise _errors.FsmPredectionError(msg)
 
-        elif self.state == JSONState.KEY_OPEN:
+        elif self.state == JSONState.EXPECT_NAME_KEY:
             self._key_buffer += token
             self.state = JSONState.KEY_BODY
 
@@ -101,7 +101,7 @@ class JSONStateMachine:
 
         elif self.state == JSONState.COLON:
             if token == '"':
-                # self.current_value = ""
+                self.current_value = ""
                 self.state = JSONState.VALUE_STRING_OPEN
             elif token.isdigit():  # token.lstrip("-").replace(".", "", 1).isdigit():
                 self.state = JSONState.VALUE_NUMBER
@@ -110,7 +110,7 @@ class JSONStateMachine:
                 raise _errors.FsmPredectionError(msg)
 
         elif self.state == JSONState.VALUE_STRING_OPEN:
-            # self.current_value += token
+            self.current_value += token
             self.state = JSONState.VALUE_STRING_BODY
 
         elif self.state == JSONState.VALUE_NUMBER:
@@ -124,8 +124,8 @@ class JSONStateMachine:
                 raise _errors.FsmPredectionError(msg)
 
         elif self.state == JSONState.VALUE_STRING_BODY:
-            if token == '"':
-                # self.current_value = self._key_buffer  # register the key
+            if '"' in token:
+                self.current_value += token
                 self.state = JSONState.VALUE_STRING_CLOSE
             else:
                 # self.current_value += token
@@ -143,15 +143,13 @@ class JSONStateMachine:
         elif self.state == JSONState.COMMA:
             if token == '"':
                 self._key_buffer = ""
-                self.state = JSONState.KEY_OPEN
+                self.state = JSONState.EXPECT_NAME_KEY
             else:
                 msg = f"Wrong prediction by llm Expected '\"' , got {token!r}"
                 raise _errors.FsmPredectionError(msg)
 
-        elif self.state == JSONState.OBJECT_END:
-            self.state = JSONState.DONE
 
-        elif self.state == JSONState.DONE:
+        elif self.state == JSONState.OBJECT_END:
             raise ValueError("State machine is done — no more tokens expected.")
 
     def is_valid_token(self, token: str) -> bool:

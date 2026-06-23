@@ -20,7 +20,7 @@ class JSONState(Enum):
     START         = auto()  # nothing generated yet
     OBJECT_START  = auto()  # just saw {
 
-    KEY_OPEN      = auto()  # just saw opening " of a key
+    EXPECT_NAME_KEY      = auto()  # just saw opening " of a key
     KEY_BODY      = auto()  # inside the key string characters
     KEY_CLOSE     = auto()  # just saw closing " of a key
 

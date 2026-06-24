@@ -34,7 +34,7 @@ class ConstraintEngine:
         elif state == JSONState.OBJECT_START:
             return {'"'}
         elif state == JSONState.EXPECT_NAME_KEY:
-            return {'name'}
+            return {'name', 'parameters'}
         elif state == JSONState.KEY_BODY:
             return {'"'}
         elif state == JSONState.KEY_CLOSE:

@@ -38,8 +38,16 @@ def validate_functions(
 
     try:
         valid_functions: list[FunctionDefinition] = []
+        seen_names: set[str] = set()
+
         for function in functions_list:
             name = function['name']
+            if name in seen_names:
+                raise ParserInvalidformat(
+                    f"Duplicate function name '{name}'"
+                )
+            seen_names.add(name)
+
             description = function['description']
             parameters = _extract_parameters(function['parameters'])
             return_ = (function['returns'])['type']

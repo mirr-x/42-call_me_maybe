@@ -75,5 +75,7 @@ Reference material used for this project includes:
 6. [Function definitions input](data/input/functions_definition.json)
 7. [Function calling test set](data/input/function_calling_tests.json)
 8. [Main FSM engein for constrained decoding](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output#from-schema-to-grammar)
+10. [0.Prefix-Constrained Decoding](https://app.notion.com/p/prefix_decoding-ALL-types-388e6e3c12ea8036b40cdffbf3594174)
+9. [Prefix-Constrained Decoding](https://www.aidancooper.co.uk/constrained-decoding/)
 
 AI was used to refine this README structure, improve clarity, and ensure the required sections were covered in English. It was not used to replace the project logic or the constrained decoding design, which must be implemented in code.

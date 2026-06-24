@@ -10,13 +10,16 @@ from call_me_maybe.llm.vocab import VocabularyManager
 
 
 def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
-    """Convert allowed token text strings into token IDs using the model tokenizer."""
+    """Convert allowed token text strings into single token IDs.
+
+    Only single-token texts are converted; multi-token strings are ignored.
+    """
 
     allowed_token_ids: set[int] = set()
     for token_text in token_texts:
         token_ids_tensor = llm.encode_text(token_text)
         token_ids = token_ids_tensor[0].tolist()
-        if token_ids:
+        if len(token_ids) == 1:
             allowed_token_ids.add(token_ids[0])
     return allowed_token_ids
 
@@ -37,13 +40,17 @@ def generate_text(llm: LLModel, prompt: str, max_steps: int) -> str:
         logits_processor = LogitsProcessor(logits=logits_for_next_token)
 
         #! return allowed tokens based on the curr status
+        best_token_id = logits_processor.get_best_token()
+        current_best_token = llm.decode_text(input_ids.new_tensor([best_token_id]))
+
         allowed_token_texts = constrained_decoding.filter_logits(
             current_state=json_state_machine,
-            current_best_token=llm.decode_text(logits_processor.get_best_token())
+            current_best_token=current_best_token,
         )
         if allowed_token_texts is not None:
             allowed_token_ids = token_texts_to_ids(llm, allowed_token_texts)
-            logits_processor.mask_logits(allowed_token_ids)
+            if allowed_token_ids:
+                logits_processor.mask_logits(allowed_token_ids)
 
         #! Get the best next token and its score
         next_token_id: int = logits_processor.get_best_token()

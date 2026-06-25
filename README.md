@@ -1,6 +1,7 @@
 _This project has been created as part of the 42 curriculum by molahrac._
 
-[call_me_maybe_banner](https://github.com/mirr-x/42-CC-1337/blob/main/images/call_me_maybe.png)
+<img src="https://github.com/mirr-x/42-CC-1337/blob/main/images/call_me_maybe.png" alt="42 Porto Common Core Banner" />
+
 
 # call me maybe
 

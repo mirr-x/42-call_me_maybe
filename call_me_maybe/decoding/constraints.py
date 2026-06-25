@@ -12,6 +12,8 @@ class ConstraintEngine:
 
     def __init__(self) -> None:
         """Initialize the constraint engine."""
+        # a mutable set of key options that can be popped as they are used
+        self.key_options: list[str] = ['parameters', 'name', 'prompt']
 
     def filter_logits(
             self, current_state: JSONStateMachine, current_best_token: str
@@ -32,15 +34,28 @@ class ConstraintEngine:
         if state == JSONState.START:
             return {'{'}
         elif state == JSONState.OBJECT_START:
-            return {'"'}
+            if '"' in current_best_token: # i just added
+                return {'"'}
+            return None
         elif state == JSONState.EXPECT_NAME_KEY:
-            return {'name', 'parameters'}
+            if self.key_options: # TODO: creat function to handle and validate
+                return {self.key_options.pop()}
+            return None  # TODO: break here i should pull out all args and then give them to ai to choose from 
         elif state == JSONState.KEY_BODY:
-            return {'"'}
+            if '"' in current_best_token:
+                return {'"'}
+            return None # TODO: llm free to choose i should do some thing here
         elif state == JSONState.KEY_CLOSE:
-            return {':'}
+            if ':' in current_best_token:
+                return {':'}
+            return None  # TODO: llm free to choose i should do some thing here
         elif state == JSONState.COLON:
-            return {'"'}
+            if '{' in current_best_token:
+                return {'{'}
+            if '"' in current_best_token:
+                return {'"'}
+            if (current_best_token.lstrip('" ')).isdigit():
+                return None # im here right now i thick i should return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '"'}  but it being handeled on jsm.py
         elif state == JSONState.VALUE_STRING_OPEN:
             return None
         elif state == JSONState.VALUE_STRING_BODY:
@@ -48,10 +63,19 @@ class ConstraintEngine:
                 return {'"'}
             return None
         elif state == JSONState.VALUE_STRING_CLOSE:
-            return {',', '}'}
+            if ',' in current_best_token:
+                return {','}
+            return {',', '}'}  # {'}'}  here is corect one 
         elif state == JSONState.VALUE_NUMBER:
-            return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '"'}
+            if ',' in current_best_token:
+                return {','}
+            if '}' in current_best_token:
+                return {'}'}
+            return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
         elif state == JSONState.COMMA:
-            return {'"'}
+            if '"' in current_best_token:
+                return {'"'}
+        elif state == JSONState.VALUE_OBJECT_CLOSE:
+            return None # TODO: return } or , or ...
 
         return None

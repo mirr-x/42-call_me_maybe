@@ -14,7 +14,7 @@ PROMPT_FILE = "data/input/function_calling_tests.json"
 
 SYSTEM_PROMPT = """
 You are a helpful assistant that generates JSON responses. You must use the exact function names by character as provided.
-Include both the chosen function name and a parameters object in the output.
+Include the original prompt, the chosen function name, and a parameters object in the output.
 
 Available functions:
 {functions_block}
@@ -23,7 +23,7 @@ User Query:
 {prompt}
 
 Response format:
-{{"name": "<function_name>", "parameters": {{ ... }}}}
+{{"prompt": "<user_query>", "name": "<function_name>", "parameters": {{ ... }}}}
 
 Response (JSON only):
 """
@@ -57,7 +57,7 @@ def main() -> None:
         )
 
         # prompt = 'Rip through a string and obliterate every pattern collision.'
-        prompt = 'i need the square root of 16 and the square root of 25'
+        prompt = 'Calculate the square root of a number'
         llm = LLModel()
         system_prompt = creat_sys_prompt(prompt, functions)
         functions_name = [f.name for f in functions]
@@ -90,6 +90,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt as e:
         logging.error("Program has been interrupted by the user: %s", e)
 
-
-
-# TODO: i have an aidia all works btw is just the llm predict more like i expected ':' and he gives ':"' it valid but not for my system what i need is give all to 10 predexctions and filter them by len then test them one by one 

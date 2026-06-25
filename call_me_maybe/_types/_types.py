@@ -29,6 +29,7 @@ class JSONState(Enum):
     VALUE_STRING_OPEN  = auto()  # just saw opening " of a string value
     VALUE_STRING_BODY  = auto()  # inside the string value characters
     VALUE_STRING_CLOSE = auto()  # just saw closing " of a string value
+    VALUE_OBJECT_CLOSE = auto()  # just closed an object value
 
     VALUE_NUMBER  = auto()  # generating a number value (digits)
 

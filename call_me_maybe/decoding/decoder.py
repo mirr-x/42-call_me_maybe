@@ -7,6 +7,8 @@ from call_me_maybe.decoding.constraints import ConstraintEngine
 from call_me_maybe.llm.logits import LogitsProcessor
 from call_me_maybe.llm.model import LLModel
 from call_me_maybe.llm.vocab import VocabularyManager
+from call_me_maybe.models.function import FunctionDefinition
+
 
 
 def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
@@ -24,15 +26,26 @@ def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
     return allowed_token_ids
 
 
-def generate_text(llm: LLModel, prompt: str, max_steps: int) -> str:
+
+def generate_text(
+        llm: LLModel,
+        prompt: str,
+        functions: list[FunctionDefinition],
+        max_steps: int
+    ) -> str:
     """Greedily generate text while printing each generation step."""
 
     input_ids = llm.encode_text(prompt)
 
     generated = input_ids[0].tolist()
     vocab_manager = VocabularyManager(llm.get_vocab_path())
-    json_state_machine = JSONStateMachine()
-    constrained_decoding = ConstraintEngine()
+    constrained_decoding = ConstraintEngine(
+        functions=functions,
+        vocab_manager=vocab_manager
+    )
+    json_state_machine = JSONStateMachine(
+        constrained_engein=constrained_decoding
+    )
 
     for i in range(max_steps):
         #! Get the logits for all possible next tokens
@@ -49,8 +62,7 @@ def generate_text(llm: LLModel, prompt: str, max_steps: int) -> str:
         )
         if allowed_token_texts is not None:
             allowed_token_ids = token_texts_to_ids(llm, allowed_token_texts)
-            if allowed_token_ids:
-                logits_processor.mask_logits(allowed_token_ids)
+            logits_processor.mask_logits(allowed_token_ids)
 
         #! Get the best next token and its score
         next_token_id: int = logits_processor.get_best_token()

@@ -1,13 +1,20 @@
 """State machine for validating simplified JSON token transitions."""
 
+
+from typing import TYPE_CHECKING
+
 from call_me_maybe._types._types import JSONState
 from call_me_maybe.parsers import _errors
+
+if TYPE_CHECKING:
+    from call_me_maybe.decoding.constraints import ConstraintEngine
+
 
 
 class JSONStateMachine:
     """Tracks parsing state while consuming JSON-like tokens."""
 
-    def __init__(self) -> None:
+    def __init__(self, constrained_engein: "ConstraintEngine") -> None:
         self.state = JSONState.START
         self._key_buffer = ""
         self.current_key: str | None = None
@@ -15,6 +22,7 @@ class JSONStateMachine:
         self.selected_function_name: str | None = None
         self.object_stack: list[str | None] = [None]
         self._escaped = False
+        self.constrained_engein: "ConstraintEngine" = constrained_engein
 
     def reset(self) -> None:
         """Reset the state machine to initial state."""
@@ -46,6 +54,12 @@ class JSONStateMachine:
 
         for char in token:
             self._update_state_char(char)
+
+        self.constrained_engein.key_buffer = self._key_buffer
+        self.constrained_engein.current_key = self.current_key
+        self.constrained_engein.value_buffer = self.current_value
+        self.constrained_engein.selected_function_name = self.selected_function_name
+
 
     def _update_state_char(self, char: str) -> None:
         if self.state == JSONState.START:
@@ -115,6 +129,12 @@ class JSONStateMachine:
         if char == ':':
             self.current_key = self._key_buffer
             self.state = JSONState.COLON
+            if (self.object_stack[-1] == 'parameters' and
+                self.current_key in self.constrained_engein.arguments):
+                self.constrained_engein.arguments.remove(self.current_key)
+            if (self.object_stack[-1] == 'parameters' and
+                self.current_key not in self.constrained_engein.arguments):
+                raise _errors.LLmModelError(f"Unknown argument: {self.current_key}")
             return
         self._raise_prediction_error("':'", char)
 
@@ -157,6 +177,11 @@ class JSONStateMachine:
         if char == '"':
             if self.current_key == 'name' and self.object_stack[-1] is None:
                 self.selected_function_name = self.current_value
+                if self.selected_function_name not in self.constrained_engein.functions_name:
+                    raise _errors.LLmModelError(f"Unknown function: {self.selected_function_name}")
+                for f in self.constrained_engein.functions:
+                    if f.name == self.selected_function_name:
+                        self.constrained_engein.arguments = [arg.name for arg in f.parameters]
             self.state = JSONState.VALUE_STRING_CLOSE
             return
         self.current_value += char

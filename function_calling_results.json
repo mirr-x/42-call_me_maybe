@@ -1,10 +1,8 @@
 
-You are a helpful assistant that generates JSON responses. You must use the exact function names character by character as provided.
+You are a helpful assistant that generates JSON responses. You must use the exact function names by character as provided.
+Include the original prompt, the chosen function name, and a parameters object in the output.
 
 Available functions:
-- name='fn_add_numbers' description='Add two numbers together and return their sum.' parameters=[<Parameter name='a' type='integer'>, <Parameter name='b' type='integer'>] return_=<Types.INTEGER: 'integer'>
-
-
 - name='fn_add_numbers' description='Add two numbers together and return their sum.' parameters=[<Parameter name='a' type='integer'>, <Parameter name='b' type='integer'>] return_=<Types.INTEGER: 'integer'>
 
 
@@ -20,14 +18,13 @@ Available functions:
 - name='fn_substitute_string_with_regex' description='Replace all occurrences matching a regex pattern in a string.' parameters=[<Parameter name='source_string' type='string'>, <Parameter name='regex' type='string'>, <Parameter name='replacement' type='string'>] return_=<Types.STRING: 'string'>
 
 
-- name='fn_substitute_string_with_regex' description='Replace all occurrences matching a regex pattern in a string.' parameters=[<Parameter name='source_string' type='string'>, <Parameter name='regex' type='string'>, <Parameter name='replacement' type='string'>] return_=<Types.STRING: 'string'>
-
-
-- name='fn_substitute_string_with_regex' description='Replace all occurrences matching a regex pattern in a string.' parameters=[<Parameter name='source_string' type='string'>, <Parameter name='regex' type='string'>, <Parameter name='replacement' type='string'>] return_=<Types.STRING: 'string'>
-
-
 User Query:
-what is the sum of 1 and 2 ?
+what sum of 6 and 5
+
+Response format:
+{"prompt": "<user_query>", "name": "<function_name>", "parameters": { ... }}
 
 Response (JSON only):
-{"name":"fn_add_numbers", "}!
+{"prompt":"what sum of 6 and 5","name":"fn_add_numbers","parameters":{"a":6,"b":5}}
+
+

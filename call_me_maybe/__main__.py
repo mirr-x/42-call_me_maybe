@@ -57,14 +57,14 @@ def main() -> None:
         )
 
         # prompt = 'Rip through a string and obliterate every pattern collision.'
-        prompt = 'Calculate the square root of a number'
+        prompt = 'what sum of 6 and 5'
         llm = LLModel()
         system_prompt = creat_sys_prompt(prompt, functions)
-        functions_name = [f.name for f in functions]
+        functions_name = [f for f in functions]
         final_text = generate_text(
             llm=llm,
             prompt=system_prompt,
-            # functions=functions_name,
+            functions=functions_name,
             max_steps=300
         )
         with open('function_calling_results.json', 'w+', encoding='utf-8') as f:

@@ -64,4 +64,3 @@ class LogitsProcessor:
         mask[allowed] = False
 
         self.logits.masked_fill_(mask, float("-inf"))
-

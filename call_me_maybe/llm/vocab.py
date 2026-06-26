@@ -43,11 +43,8 @@ class VocabularyManager:
 
         return self.id_to_token.get(id_, "<UNK>")
 
-
     def get_id_by_token(self, token: str) -> int:
 
         """Return the integer ID associated with a token, if present."""
 
         return self.token_to_id.get(token, -1)
-
-    # def mask_logists()

@@ -72,32 +72,29 @@ class ConstraintEngine:
         if state == JSONState.START:
             return {'{'}
         elif state == JSONState.OBJECT_START:
-            if '"' in current_best_token:
-                return {'"'}
+
+            return {'"'}
         elif state == JSONState.EXPECT_NAME_KEY:
             if self.key_options:
                 return {self.key_options.pop()}
             elif self.arguments is not None:
                 valid_token_text = self._get_valid_tokens_text_for_prefix_arguments()
                 return valid_token_text
-            return None  # TODO: break here i should pull out all args and then give them to ai to choose from 
         elif state == JSONState.KEY_BODY:
             if '"' in current_best_token:
                 return {'"'}
-            return None # TODO: llm free to choose i should do some thing here
         elif state == JSONState.KEY_CLOSE:
             if ':' in current_best_token:
                 return {':'}
-            return None  # TODO: llm free to choose i should do some thing here
         elif state == JSONState.COLON:
             if '{' in current_best_token:
                 return {'{'}
             if '"' in current_best_token:
                 return {'"'}
             if (current_best_token.lstrip('" ')).isdigit():
-                return None # im here right now i thick i should return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '"'}  but it being handeled on jsm.py
+                return None # it being handeled on jsm.py
         elif state == JSONState.VALUE_STRING_OPEN:
-            if self.current_key == 'name':
+            if self.current_key == 'name' and self.selected_function_name is None:
                 valid_token_text = self._get_valid_tokens_text_for_prefix_functions()
                 return valid_token_text
             return None
@@ -111,7 +108,7 @@ class ConstraintEngine:
         elif state == JSONState.VALUE_STRING_CLOSE:
             if ',' in current_best_token:
                 return {','}
-            return {',', '}'}  # {'}'}  here is corect one 
+            return {',', '}'}
         elif state == JSONState.VALUE_NUMBER:
             if ',' in current_best_token:
                 return {','}
@@ -122,6 +119,6 @@ class ConstraintEngine:
             if '"' in current_best_token:
                 return {'"'}
         elif state == JSONState.VALUE_OBJECT_CLOSE:
-            return None # TODO: return } or , or ...
+            return None
 
         return None

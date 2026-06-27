@@ -1,14 +1,14 @@
 """Constrained decoding engine"""
 
+import json
 import torch
 
-from call_me_maybe.decoding.json_state_machine import JSONStateMachine
-from call_me_maybe.decoding.constraints import ConstraintEngine
-from call_me_maybe.llm.logits import LogitsProcessor
 from call_me_maybe.llm.model import LLModel
+from call_me_maybe.llm.logits import LogitsProcessor
 from call_me_maybe.llm.vocab import VocabularyManager
 from call_me_maybe.models.function import FunctionDefinition
-
+from call_me_maybe.decoding.constraints import ConstraintEngine
+from call_me_maybe.decoding.json_state_machine import JSONStateMachine
 
 
 def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
@@ -24,7 +24,6 @@ def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
         if len(token_ids) == 1:
             allowed_token_ids.add(token_ids[0])
     return allowed_token_ids
-
 
 
 def generate_text(
@@ -47,6 +46,7 @@ def generate_text(
         constrained_engein=constrained_decoding
     )
 
+    json_output = []
     for i in range(max_steps):
         #! Get the logits for all possible next tokens
         logits_for_next_token: list[float] = llm.get_all_next_tokens_logits(generated)
@@ -85,6 +85,13 @@ def generate_text(
         print(f"curr token in vocab: _{token_in_vocab}_")
         print(f"curr token display: _{displayable_token}_")
         generated.append(next_token_id)
+        json_output.append(next_token_id)
+
+    with open('function_calling_results.json', 'w', encoding='utf-8') as file:
+        decoded_json = llm.decode_text(input_ids.new_tensor(json_output))
+        json_obj = json.loads(decoded_json)
+        json.dump(json_obj, file, indent=4)
+
 
     text = llm.decode_text(torch.tensor(generated))
     return text

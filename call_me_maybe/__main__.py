@@ -56,18 +56,18 @@ def main() -> None:
             len(prompts),
         )
 
-        # prompt = 'Rip through a string and obliterate every pattern collision.'
-        prompt = 'what sum of 6 and 5'
+        # pahse 2: LLm part
         llm = LLModel()
-        system_prompt = creat_sys_prompt(prompt, functions)
-        functions_name = [f for f in functions]
+        # for prompt in prompts:
+        system_prompt = creat_sys_prompt(prompts[3].prompt, functions)
         final_text = generate_text(
             llm=llm,
             prompt=system_prompt,
-            functions=functions_name,
+            functions=functions,
             max_steps=300
         )
-        with open('function_calling_results.json', 'w+', encoding='utf-8') as f:
+
+        with open('output_llm', 'w+', encoding='utf-8') as f:
             f.write(final_text)
         logging.info("Final generated text: %s", final_text)
 

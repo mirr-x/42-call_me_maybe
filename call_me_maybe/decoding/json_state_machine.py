@@ -130,11 +130,11 @@ class JSONStateMachine:
             self.current_key = self._key_buffer
             self.state = JSONState.COLON
             if (self.object_stack[-1] == 'parameters' and
-                self.current_key in self.constrained_engein.arguments):
-                self.constrained_engein.arguments.remove(self.current_key)
-            if (self.object_stack[-1] == 'parameters' and
                 self.current_key not in self.constrained_engein.arguments):
                 raise _errors.LLmModelError(f"Unknown argument: {self.current_key}")
+            if (self.object_stack[-1] == 'parameters' and
+                self.current_key in self.constrained_engein.arguments):
+                self.constrained_engein.arguments.remove(self.current_key)
             return
         self._raise_prediction_error("':'", char)
 

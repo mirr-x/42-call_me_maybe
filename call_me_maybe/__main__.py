@@ -58,14 +58,14 @@ def main() -> None:
 
         # pahse 2: LLm part
         llm = LLModel()
-        # for prompt in prompts:
-        system_prompt = creat_sys_prompt(prompts[3].prompt, functions)
-        final_text = generate_text(
-            llm=llm,
-            prompt=system_prompt,
-            functions=functions,
-            max_steps=300
-        )
+        for prompt in prompts:
+            system_prompt = creat_sys_prompt(prompt.prompt, functions)
+            final_text = generate_text(
+                llm=llm,
+                prompt=system_prompt,
+                functions=functions,
+                max_steps=300
+            )
 
         with open('output_llm', 'w+', encoding='utf-8') as f:
             f.write(final_text)
@@ -89,4 +89,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         logging.error("Program has been interrupted by the user: %s", e)
-

@@ -17,22 +17,22 @@ class Types(Enum):
 class JSONState(Enum):
     """JSON parsing state identifiers."""
 
-    START         = auto()  # nothing generated yet
-    OBJECT_START  = auto()  # just saw {
+    START = auto()  # nothing generated yet
+    OBJECT_START = auto()  # just saw {
 
-    EXPECT_NAME_KEY      = auto()  # just saw opening " of a key
-    KEY_BODY      = auto()  # inside the key string characters
-    KEY_CLOSE     = auto()  # just saw closing " of a key
+    EXPECT_NAME_KEY = auto()  # just saw opening " of a key
+    KEY_BODY = auto()  # inside the key string characters
+    KEY_CLOSE = auto()  # just saw closing " of a key
 
-    COLON         = auto()  # just saw :
+    COLON = auto()  # just saw :
 
-    VALUE_STRING_OPEN  = auto()  # just saw opening " of a string value
-    VALUE_STRING_BODY  = auto()  # inside the string value characters
+    VALUE_STRING_OPEN = auto()  # just saw opening " of a string value
+    VALUE_STRING_BODY = auto()  # inside the string value characters
     VALUE_STRING_CLOSE = auto()  # just saw closing " of a string value
     VALUE_OBJECT_CLOSE = auto()  # just closed an object value
 
-    VALUE_NUMBER  = auto()  # generating a number value (digits)
+    VALUE_NUMBER = auto()  # generating a number value (digits)
 
-    COMMA         = auto()  # just saw , — next key coming
-    OBJECT_END    = auto()  # just saw }
-    DONE          = auto()  # generation complete
+    COMMA = auto()  # just saw , — next key coming
+    OBJECT_END = auto()  # just saw }
+    DONE = auto()  # generation complete

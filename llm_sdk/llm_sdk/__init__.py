@@ -41,6 +41,11 @@ class Small_LLM_Model:
                 device = "cuda"
             else:
                 device = "cpu"
+
+        # Resolve abstract CUDA device to a concrete single GPU so all tensors
+        # and model weights stay on the same device during forward passes.
+        if device == "cuda":
+            device = "cuda:0"
         self._device = device
 
         if dtype is None:
@@ -58,7 +63,7 @@ class Small_LLM_Model:
         self._model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=self._dtype,
-            device_map="auto" if self._device == "cuda" else None,
+            device_map=None,
             trust_remote_code=trust_remote_code,
         )
         self._model.to(self._device)

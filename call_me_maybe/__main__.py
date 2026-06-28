@@ -1,6 +1,7 @@
 """Call Me Maybe Entry Point"""
 
 import logging
+import json
 
 from call_me_maybe.models.function import FunctionDefinition
 from call_me_maybe.llm.model import LLModel
@@ -58,17 +59,27 @@ def main() -> None:
 
         # pahse 2: LLm part
         llm = LLModel()
-        for prompt in prompts:
-            system_prompt = creat_sys_prompt(prompt.prompt, functions)
-            final_text = generate_text(
-                llm=llm,
-                prompt=system_prompt,
-                functions=functions,
-                max_steps=300
-            )
+        json_output = []
+        # for prompt in prompts:
+        system_prompt = creat_sys_prompt(prompts[8].prompt, functions)
+        final_text = generate_text(
+            llm=llm,
+            prompt=system_prompt,
+            functions=functions,
+            max_steps=300,
+        )
 
-        with open('output_llm', 'w+', encoding='utf-8') as f:
-            f.write(final_text)
+        try:
+            json_obj = json.loads(final_text)
+        except json.JSONDecodeError:
+            # if not valid JSON, store raw text
+            json_obj = {"prompt": prompts[8].prompt, "raw": final_text}
+
+        json_output.append(json_obj)
+
+        with open("function_calling_results.json", "w", encoding="utf-8") as f:
+            json.dump(json_output, f, indent=4)
+
         logging.info("Final generated text: %s", final_text)
 
     except _errors.ParserError as e:

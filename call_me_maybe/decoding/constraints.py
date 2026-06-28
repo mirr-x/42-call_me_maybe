@@ -1,4 +1,5 @@
-"""Constraint engine for filtering logits based on JSON state and function definitions."""
+"""Constraint engine for filtering logits based on JSON state and
+function definitions."""
 
 
 from call_me_maybe.decoding.json_state_machine import JSONStateMachine
@@ -8,7 +9,7 @@ from call_me_maybe.llm.vocab import VocabularyManager
 
 
 class ConstraintEngine:
-    """Engine for constraining valid next tokens based on JSON parsing state."""
+    """Engine for constraining valid next tokens based on JSON parsing state"""
 
     def __init__(
             self,
@@ -36,7 +37,8 @@ class ConstraintEngine:
         for token_text, _ in self.vocab_manager.token_to_id.items():
             temp_token = self.value_buffer + token_text
             for f in self.functions:
-                if f.name.startswith(temp_token) and len(f.name) >= len(temp_token):
+                if (f.name.startswith(temp_token) and
+                        len(f.name) >= len(temp_token)):
                     allowed.add(token_text)
         return allowed
 
@@ -56,15 +58,15 @@ class ConstraintEngine:
     def filter_logits(
             self, current_state: JSONStateMachine, current_best_token: str
             ) -> set[str] | None:
-        """Return a set of allowed next token text strings given the current JSON state.
-
+        """Return the allowed next token strings for the JSON state.
 
         Args:
-            current_state (JSONStateMachine): The current JSON state machine instance
-            current_best_token (str): The best token text
+            current_state: The current JSONStateMachine instance.
+            current_best_token: The best token text.
 
         Returns:
-            set[str] | None: Set of allowed next token strings, or None if no constraints are applied.
+            A set of allowed next token text strings, or None when there
+            are no constraints.
         """
 
         state = current_state.get_state()
@@ -78,8 +80,7 @@ class ConstraintEngine:
             if self.key_options:
                 return {self.key_options.pop()}
             elif self.arguments is not None:
-                valid_token_text = self._get_valid_tokens_text_for_prefix_arguments()
-                return valid_token_text
+                return self._get_valid_tokens_text_for_prefix_arguments()
         elif state == JSONState.KEY_BODY:
             if '"' in current_best_token:
                 return {'"'}
@@ -92,18 +93,17 @@ class ConstraintEngine:
             if '"' in current_best_token:
                 return {'"'}
             if (current_best_token.lstrip('" ')).isdigit():
-                return None # it being handeled on jsm.py
+                return None  # it being handeled on jsm.py
         elif state == JSONState.VALUE_STRING_OPEN:
-            if self.current_key == 'name' and self.selected_function_name is None:
-                valid_token_text = self._get_valid_tokens_text_for_prefix_functions()
-                return valid_token_text
+            if (self.current_key == 'name' and
+                    self.selected_function_name is None):
+                return self._get_valid_tokens_text_for_prefix_functions()
             return None
         elif state == JSONState.VALUE_STRING_BODY:
             if '"' in current_best_token:
                 return {'"'}
-            elif self.current_key == 'name':
-                valid_token_text = self._get_valid_tokens_text_for_prefix_functions()
-                return valid_token_text
+            if self.current_key == 'name':
+                return self._get_valid_tokens_text_for_prefix_functions()
             return None
         elif state == JSONState.VALUE_STRING_CLOSE:
             if ',' in current_best_token:

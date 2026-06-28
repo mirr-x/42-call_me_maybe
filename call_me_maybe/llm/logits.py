@@ -6,9 +6,9 @@ import torch
 class LogitsProcessor:
     """Processor for handling logits arrays from language models."""
 
-    def __init__(self, logits: list[float]) -> None:
+    def __init__(self, logits: torch.Tensor) -> None:
 
-        self.logits = torch.tensor(logits)
+        self.logits: torch.Tensor = logits
 
     def get_best_token(self) -> int:
         """Get the token ID with the highest logit score.

@@ -1,6 +1,5 @@
 """Constrained decoding engine"""
 
-import json
 import torch
 
 from call_me_maybe.llm.model import LLModel
@@ -12,9 +11,14 @@ from call_me_maybe.decoding.json_state_machine import JSONStateMachine
 
 
 def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
-    """Convert allowed token text strings into single token IDs.
+    """Convert token text strings to single-token IDs.
 
-    Only single-token texts are converted; multi-token strings are ignored.
+    Args:
+        llm (LLModel): Language model tokenizer interface.
+        token_texts (set[str]): Candidate token text values.
+
+    Returns:
+        set[int]: IDs for token texts that map to exactly one token.
     """
 
     allowed_token_ids: set[int] = set()
@@ -26,13 +30,64 @@ def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
     return allowed_token_ids
 
 
+def _decode_token_id(
+        llm: LLModel,
+        token_id: int,
+        tensor_template: torch.Tensor) -> str:
+    """Decode a single token ID into text using a tensor template."""
+
+    token_tensor = tensor_template.new_tensor([token_id])
+    return llm.decode_text(token_tensor)
+
+
+def _build_logits_processor(
+        llm: LLModel,
+        input_ids: torch.Tensor,
+        generated: list[int]) -> LogitsProcessor:
+    """Create a logits processor for the current generation step."""
+
+    logits_for_next_token: list[float] = llm.get_all_next_tokens_logits(
+        generated
+    )
+    return LogitsProcessor(
+        logits=input_ids.new_tensor(logits_for_next_token, dtype=torch.float32)
+    )
+
+
+def _decode_current_best_token(
+        llm: LLModel,
+        logits_processor: LogitsProcessor,
+        tensor_template: torch.Tensor) -> str:
+    """Decode the highest-scoring token from the current logits."""
+
+    best_token_id: int = logits_processor.get_best_token()
+    return _decode_token_id(llm, best_token_id, tensor_template)
+
+
+def mask_logits(
+        llm: LLModel,
+        logits_processor: LogitsProcessor,
+        allowed_token_texts: set[str]) -> None:
+    """Mask logits to allow only the provided token texts.
+
+    Args:
+        llm (LLModel): Model used to encode token texts to token IDs.
+        logits_processor (LogitsProcessor): Processor whose logits are
+            masked in place.
+        allowed_token_texts (set[str]): Token text strings that should
+            remain allowed.
+    """
+    allowed_token_ids = token_texts_to_ids(llm, allowed_token_texts)
+    logits_processor.mask_logits(allowed_token_ids)
+
+
 def generate_text(
         llm: LLModel,
         prompt: str,
         functions: list[FunctionDefinition],
         max_steps: int
-    ) -> str:
-    """Greedily generate text while printing each generation step."""
+        ) -> str:
+    """Generate a constrained JSON completion for the provided prompt."""
 
     input_ids = llm.encode_text(prompt)
 
@@ -47,51 +102,33 @@ def generate_text(
     )
 
     json_output = []
-    for i in range(max_steps):
-        #! Get the logits for all possible next tokens
-        logits_for_next_token: list[float] = llm.get_all_next_tokens_logits(generated)
-        logits_processor = LogitsProcessor(logits=logits_for_next_token)
+    for _ in range(max_steps):
+        # Build logits processor and decode the current best token
+        logits_processor = _build_logits_processor(llm, input_ids, generated)
+        current_best_token = _decode_current_best_token(
+            llm, logits_processor, input_ids
+        )
 
-        #! return allowed tokens based on the curr status
-        best_token_id = logits_processor.get_best_token()
-        current_best_token = llm.decode_text(input_ids.new_tensor([best_token_id]))
-
+        # return allowed tokens based on the curr status
         allowed_token_texts = constrained_decoding.filter_logits(
             current_state=json_state_machine,
             current_best_token=current_best_token,
         )
+        # mask the logits to only allow the allowed tokens
         if allowed_token_texts is not None:
-            allowed_token_ids = token_texts_to_ids(llm, allowed_token_texts)
-            logits_processor.mask_logits(allowed_token_ids)
+            mask_logits(llm, logits_processor, allowed_token_texts)
 
-        #! Get the best next token and its score
+        # validate the best token and update the state machine
         next_token_id: int = logits_processor.get_best_token()
-        displayable_token = llm.decode_text(input_ids.new_tensor([next_token_id]))
+        next_token_text = _decode_token_id(llm, next_token_id, input_ids)
 
-        #! validate the next token with the json state machine and update the state if valid
-        state = json_state_machine.is_valid_token(displayable_token)
-        print(json_state_machine)
-        if state is False:
+        if not json_state_machine.is_valid_token(next_token_text):
             break
-        best_10_token = logits_processor.get_top_k_tokens(10)
-        for i in range(10):
-            print(f'top {i} token: _{llm.decode_text(best_10_token[i])}_ | score: {logits_processor.get_token_score(best_10_token[i])}')
-        print()
-        print(f"STEP {i}")
-        print(f"TOKEN ID: {next_token_id}")
-        print(f"TOKEN SCORE: {logits_processor.get_token_score(next_token_id)}")
-        print(f"CURRENT TEXT: {llm.decode_text(input_ids.new_tensor([generated]))}")
-        token_in_vocab = vocab_manager.get_token_by_id(next_token_id)
-        print(f"curr token in vocab: _{token_in_vocab}_")
-        print(f"curr token display: _{displayable_token}_")
+
         generated.append(next_token_id)
         json_output.append(next_token_id)
 
-    with open('function_calling_results.json', 'w', encoding='utf-8') as file:
-        decoded_json = llm.decode_text(input_ids.new_tensor(json_output))
-        json_obj = json.loads(decoded_json)
-        json.dump(json_obj, file, indent=4)
+        if json_state_machine.get_state().name == 'OBJECT_END':
+            break
 
-
-    text = llm.decode_text(torch.tensor(generated))
-    return text
+    return llm.decode_text(input_ids.new_tensor(json_output))

@@ -33,7 +33,7 @@ class Parameter(BaseModel):
         if isinstance(type_, str) and type_.lower() == 'string':
             return Types.STRING
         if isinstance(type_, str) and type_.lower() == 'number':
-            return Types.INTEGER
+            return Types.FLOAT
         raise _errors.ParserValidationError(f'Invalid parameter type {type_}')
 
     def __repr__(self) -> str:
@@ -72,7 +72,7 @@ class FunctionDefinition(BaseModel):
         if isinstance(return_, str) and return_.lower() == 'string':
             return Types.STRING
         if isinstance(return_, str) and return_.lower() == 'number':
-            return Types.INTEGER
+            return Types.FLOAT
         raise _errors.ParserValidationError(f'Invalid return type {return_}')
 
     def __repr__(self) -> str:

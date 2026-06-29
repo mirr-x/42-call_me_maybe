@@ -1,7 +1,8 @@
 """Call Me Maybe Entry Point"""
 
-import logging
+import os
 import json
+import logging
 
 from call_me_maybe.models.function import FunctionDefinition
 from call_me_maybe.llm.model import LLModel
@@ -12,10 +13,12 @@ from call_me_maybe.decoding.decoder import generate_text
 
 FUNCTIONS_FILE = "data/input/functions_definition.json"
 PROMPT_FILE = "data/input/function_calling_tests.json"
+OUTPUT_FILE = "data/output/function_calling_results.json"
 
 SYSTEM_PROMPT = """
-You are a helpful assistant that generates JSON responses. You must use the exact function names by character as provided.
-Include the original prompt, the chosen function name, and a parameters object in the output.
+You are a helpful assistant that generates JSON responses. You must use the
+exact function names by character as provided. Include the original prompt, the
+chosen function name, and a parameters object in the output.
 
 Available functions:
 {functions_block}
@@ -24,7 +27,7 @@ User Query:
 {prompt}
 
 Response format:
-{{"prompt": "<user_query>", "name": "<function_name>", "parameters": {{ ... }}}}
+{{"prompt":"<user_query>","name":"<function_name>","parameters": {{ ... }}}}
 
 Response (JSON only):
 """
@@ -39,14 +42,41 @@ def creat_sys_prompt(prompt: str, functions: list[FunctionDefinition]) -> str:
     return SYSTEM_PROMPT.format(functions_block=functions_block, prompt=prompt)
 
 
+def extract_files_path_from_args() -> tuple[str, str, str]:
+    """Extract the file paths from command line arguments.
+
+    Returns (functions_file, prompt_file, output_file).
+    """
+    arguments = os.sys.argv[1:]
+    functions_file = FUNCTIONS_FILE
+    prompt_file = PROMPT_FILE
+    output_file = OUTPUT_FILE
+
+    for i, arg in enumerate(arguments):
+        # use ASCII hyphens for flags
+        if arg == "--functions_definition" and i + 1 < len(arguments):
+            functions_file = arguments[i + 1]
+        elif arg == "--input" and i + 1 < len(arguments):
+            prompt_file = arguments[i + 1]
+        elif arg == "--output" and i + 1 < len(arguments):
+            output_file = arguments[i + 1]
+
+    return functions_file, prompt_file, output_file
+
+
 def main() -> None:
     """Main function for Call Me Maybe"""
     logging.info("Call Me Maybe started\n")
 
     try:
+        # extract arguments from command line
+        functions_f, prompt_f, output_f = extract_files_path_from_args()
+        print(f"Using functions definition file: {functions_f}")
+        print(f"Using input prompt file: {prompt_f}")
+        print(f"Using output file: {output_f}")
         # Phase 1: Parsing
         parsing = Parsing(
-            file_name_functions=FUNCTIONS_FILE, file_name_prompt=PROMPT_FILE
+            file_name_functions=functions_f, file_name_prompt=prompt_f
         )
         parsing.run()
         functions = parsing.get_function()
@@ -60,24 +90,26 @@ def main() -> None:
         # pahse 2: LLm part
         llm = LLModel()
         json_output = []
-        # for prompt in prompts:
-        system_prompt = creat_sys_prompt(prompts[8].prompt, functions)
-        final_text = generate_text(
-            llm=llm,
-            prompt=system_prompt,
-            functions=functions,
-            max_steps=300,
-        )
+        for prompt in prompts:
+            prefix_prompt = f'{{"prompt": "{prompt.prompt}",'
+            system_prompt = creat_sys_prompt(prompt.prompt, functions)
+            final_text = generate_text(
+                llm=llm,
+                system_prompt=system_prompt,
+                prefix_prompt=prefix_prompt,
+                functions=functions,
+                max_steps=300,
+            )
 
-        try:
-            json_obj = json.loads(final_text)
-        except json.JSONDecodeError:
-            # if not valid JSON, store raw text
-            json_obj = {"prompt": prompts[8].prompt, "raw": final_text}
+            try:
+                json_obj = json.loads(prefix_prompt + final_text)
+            except json.JSONDecodeError:
+                # if not valid JSON, store raw text
+                json_obj = {"prompt": prompt.prompt, "raw": final_text}
 
-        json_output.append(json_obj)
+            json_output.append(json_obj)
 
-        with open("function_calling_results.json", "w", encoding="utf-8") as f:
+        with open(output_f, "w", encoding="utf-8") as f:
             json.dump(json_output, f, indent=4)
 
         logging.info("Final generated text: %s", final_text)
@@ -100,3 +132,5 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         logging.error("Program has been interrupted by the user: %s", e)
+    except Exception as e:
+        logging.error("An unexpected error occurred: %s", e)

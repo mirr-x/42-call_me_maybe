@@ -12,6 +12,7 @@ class Types(Enum):
 
     STRING = 'string'
     INTEGER = 'integer'
+    FLOAT = 'float'
 
 
 class JSONState(Enum):

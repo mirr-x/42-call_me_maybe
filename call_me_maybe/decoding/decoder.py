@@ -106,7 +106,6 @@ def generate_text(
 
     json_output = []
     for _ in range(max_steps):
-        print(f"input_ids: {llm.decode_text(generated)}")
         # Build logits processor and decode the current best token
         logits_processor = _build_logits_processor(llm, input_ids, generated)
         current_best_token = _decode_current_best_token(
@@ -126,8 +125,11 @@ def generate_text(
         next_token_id: int = logits_processor.get_best_token()
         next_token_text = _decode_token_id(llm, next_token_id, input_ids)
 
-        if not json_state_machine.is_valid_token(next_token_text):
-            break
+        # bonus: if the best token is not valid, block it and get the next best token
+        while json_state_machine.is_valid_token(next_token_text) is False:
+            logits_processor.block_token({next_token_id})
+            next_token_id = logits_processor.get_best_token()
+            next_token_text = _decode_token_id(llm, next_token_id, input_ids)
 
         generated.append(next_token_id)
         json_output.append(next_token_id)

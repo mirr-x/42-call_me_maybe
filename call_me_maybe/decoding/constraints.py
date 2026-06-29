@@ -34,6 +34,7 @@ class ConstraintEngine:
         self.object_stack: list[str | None] = [None]
 
         self.arguments: list[str] | None = None
+        self.digit_count = 0
 
     def _get_valid_tokens_text_for_prefix_functions(self) -> set[str]:
         """ get all tokens that start with val_buffer """
@@ -118,15 +119,18 @@ class ConstraintEngine:
             if '}' in current_best_token:
                 return {'}'}
         elif state == JSONState.VALUE_NUMBER:
-            if ',' in current_best_token:
-                return {','}
-            if '}' in current_best_token:
-                return {'}'}
-            return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+            self.digit_count += 1
+            if self.digit_count <= 10:
+                return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', '}'}
+            else:
+                self.digit_count = 0
+                return {',', '}'}
         elif state == JSONState.COMMA:
             if '"' in current_best_token:
                 return {'"'}
         elif state == JSONState.VALUE_OBJECT_CLOSE:
             return None
+        else:
+            self.digit_count = 0
 
         return None

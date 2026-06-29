@@ -8,6 +8,8 @@ dependencies = [
     "numpy>=2.4.6",
     "pydantic>=2.13.4",
     "llm-sdk",
+    "accelerate>=1.14.0",
+    "wrapt>=2.2.2",
 ]
 
 [tool.uv.sources]

@@ -74,14 +74,14 @@ def validate_prompts(
         prompts_list: List of dictionaries describing prompts.
 
     Returns:
-        list[Prompts]: A list of Prompts instances.
+        list[Prompt]: A list of Prompt instances.
     """
 
     try:
         valid_prompts: list[Prompt] = []
         for prompt in prompts_list:
-            prompt = prompt['prompt']
-            valid_prompts.append(Prompt(prompt=prompt))
+            prompt_text = prompt['prompt'].replace('"', '\\"')
+            valid_prompts.append(Prompt(prompt=prompt_text))
 
         return valid_prompts
     except KeyError as cause:

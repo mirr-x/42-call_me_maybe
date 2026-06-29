@@ -3,6 +3,7 @@
 import torch
 
 from call_me_maybe.llm.model import LLModel
+from call_me_maybe._types._types import JSONState
 from call_me_maybe.llm.logits import LogitsProcessor
 from call_me_maybe.llm.vocab import VocabularyManager
 from call_me_maybe.models.function import FunctionDefinition
@@ -83,13 +84,14 @@ def mask_logits(
 
 def generate_text(
         llm: LLModel,
-        prompt: str,
+        system_prompt: str,
+        prefix_prompt: str,
         functions: list[FunctionDefinition],
         max_steps: int
         ) -> str:
-    """Generate a constrained JSON completion for the provided prompt."""
+    """Generate a constrained JSON compltion for the provided system_prompt."""
 
-    input_ids = llm.encode_text(prompt)
+    input_ids = llm.encode_text(system_prompt + prefix_prompt)
 
     generated = input_ids[0].tolist()
     vocab_manager = VocabularyManager(llm.get_vocab_path())
@@ -100,9 +102,11 @@ def generate_text(
     json_state_machine = JSONStateMachine(
         constrained_engein=constrained_decoding
     )
+    json_state_machine.state = JSONState.COMMA
 
     json_output = []
     for _ in range(max_steps):
+        print(f"input_ids: {llm.decode_text(generated)}")
         # Build logits processor and decode the current best token
         logits_processor = _build_logits_processor(llm, input_ids, generated)
         current_best_token = _decode_current_best_token(
@@ -130,5 +134,6 @@ def generate_text(
 
         if json_state_machine.get_state().name == 'OBJECT_END':
             break
+        print(f"token_text: {next_token_text}")
 
     return llm.decode_text(input_ids.new_tensor(json_output))

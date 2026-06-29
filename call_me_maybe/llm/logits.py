@@ -65,3 +65,11 @@ class LogitsProcessor:
         mask[allowed] = False
 
         self.logits.masked_fill_(mask, float("-inf"))
+
+    def block_token(self, token_id: int) -> None:
+        """Block a specific token by setting its logit to -inf.
+
+        Args:
+            token_id (int): The ID of the token to block.
+        """
+        self.logits[token_id] = float("-inf")

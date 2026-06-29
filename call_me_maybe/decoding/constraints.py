@@ -17,16 +17,21 @@ class ConstraintEngine:
             vocab_manager: VocabularyManager) -> None:
         """Initialize the constraint engine."""
 
-        self.functions: list[FunctionDefinition] = functions
+        self.functions: list[FunctionDefinition] = sorted(
+            functions,
+            key=lambda f: len(f.name),
+            reverse=True
+        )
         self.functions_name = [f.name for f in self.functions]
         self.vocab_manager: VocabularyManager = vocab_manager
 
-        self.key_options: list[str] = ['parameters', 'name', 'prompt']
+        self.key_options: list[str] = ['parameters', 'name']
 
         self.key_buffer = ""
         self.current_key: str | None = None
         self.value_buffer = ""
         self.selected_function_name: str | None = None
+        self.object_stack: list[str | None] = [None]
 
         self.arguments: list[str] | None = None
 
@@ -54,9 +59,10 @@ class ConstraintEngine:
 
         return allowed
 
-
     def filter_logits(
-            self, current_state: JSONStateMachine, current_best_token: str
+            self,
+            current_state: JSONStateMachine,
+            current_best_token: str,
             ) -> set[str] | None:
         """Return the allowed next token strings for the JSON state.
 
@@ -74,7 +80,6 @@ class ConstraintEngine:
         if state == JSONState.START:
             return {'{'}
         elif state == JSONState.OBJECT_START:
-
             return {'"'}
         elif state == JSONState.EXPECT_NAME_KEY:
             if self.key_options:
@@ -100,15 +105,18 @@ class ConstraintEngine:
                 return self._get_valid_tokens_text_for_prefix_functions()
             return None
         elif state == JSONState.VALUE_STRING_BODY:
-            if '"' in current_best_token:
-                return {'"'}
-            if self.current_key == 'name':
+            if (self.current_key == 'name' and
+                    self.selected_function_name is None):
+                if self.value_buffer in self.functions_name:
+                    return {'"'}
                 return self._get_valid_tokens_text_for_prefix_functions()
-            return None
+            if current_best_token.strip().startswith('"'):
+                return {'"'}
         elif state == JSONState.VALUE_STRING_CLOSE:
             if ',' in current_best_token:
                 return {','}
-            return {',', '}'}
+            if '}' in current_best_token:
+                return {'}'}
         elif state == JSONState.VALUE_NUMBER:
             if ',' in current_best_token:
                 return {','}

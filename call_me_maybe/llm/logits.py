@@ -46,7 +46,8 @@ class LogitsProcessor:
         return self.logits[token_id].item()
 
     def mask_logits(self, allowed_tokens: set[int]) -> None:
-        """Apply masking to tokens by setting logits for disallowed token IDs to -inf.
+        """Apply masking to tokens by setting logits for disallowed
+            token IDs to -inf.
 
         Args:
             allowed_tokens (set[int]): Set of token IDs that remain unmasked.

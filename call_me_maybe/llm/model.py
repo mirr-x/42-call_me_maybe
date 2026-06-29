@@ -81,7 +81,7 @@ class LLModel:
             raise _errors.LLmModelDecodeError(msg) from e
 
     def get_all_next_tokens_logits(
-        self, token_ids_encoded: list[int]) -> list[float]:
+            self, token_ids_encoded: list[int]) -> list[float]:
         """Return logits for the next-token prediction given input ids.
 
         Args:

@@ -5,6 +5,9 @@ install:
 run:
 	uv run python -m call_me_maybe
 
+run-visual:
+	uv run python -m call_me_maybe --visualize
+
 debug:
 	uv run python -m pdb -m call_me_maybe.main
 

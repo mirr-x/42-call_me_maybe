@@ -109,7 +109,7 @@ def main() -> None:
         for prompt in prompts:
             prefix_prompt = f'{{"prompt": "{prompt.prompt}",'
             system_prompt = creat_sys_prompt(prompt.prompt, functions)
-            visualizer = GenerationVisualizer(enabled=True)
+            visualizer = GenerationVisualizer(enabled=visualize)
             final_text = generate_text(
                 llm=llm,
                 system_prompt=system_prompt,
@@ -129,8 +129,6 @@ def main() -> None:
 
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(json_output, f, indent=4)
-
-        logging.info("Final generated JSON: %s", json_output)
 
     except _errors.ParserError as e:
         logging.error("PARSING ERROR: {%s} : cause {%s}", e, e.__cause__)

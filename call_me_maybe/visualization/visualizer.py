@@ -106,7 +106,11 @@ class GenerationVisualizer:
         self._output_stream += final_token
 
         status_color = _AMBER if retried else (_RED if was_masked else _GREEN)
-        status_label = "RETRY" if retried else ("MASKED" if was_masked else "OK")
+        status_label = (
+            "RETRY"
+            if retried
+            else ("MASKED" if was_masked else "OK")
+        )
 
         state_col = f"{_GREY}{state_name.ljust(20)}{_RESET}"
         raw_col = f"{_DIM}raw:{_RESET} {_truncate(repr(raw_best_token), 14)}"
@@ -143,7 +147,6 @@ class GenerationVisualizer:
         title = f" {label} — {self.step} tokens generated "
         print(f"{_BOLD}{color}│{title.center(self.width)}│{_RESET}")
         print(f"{_BOLD}{color}├{'─' * (self.width)}┤{_RESET}")
-        # out_line = f" {_truncate(final_json, self.width - 4)}"
         for i in range(0, len(final_json), self.width - 7):
             out_line = final_json[i:i + self.width - 7]
             print(

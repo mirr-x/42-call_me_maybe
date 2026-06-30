@@ -121,7 +121,10 @@ class ConstraintEngine:
         elif state == JSONState.VALUE_NUMBER:
             self.digit_count += 1
             if self.digit_count <= 10:
-                return {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', '}'}
+                return {
+                    '0', '1', '2', '3', '4', '5', '6',
+                    '7', '8', '9', '.', ',', '}'
+                }
             else:
                 self.digit_count = 0
                 return {',', '}'}
@@ -129,7 +132,8 @@ class ConstraintEngine:
             if '"' in current_best_token:
                 return {'"'}
         elif state == JSONState.VALUE_OBJECT_CLOSE:
-            return None
+            if '}' in current_best_token:
+                return {'}'}
         else:
             self.digit_count = 0
 

@@ -130,14 +130,14 @@ def generate_text(
         next_token_id: int = logits_processor.get_best_token()
         next_token_text = _decode_token_id(llm, next_token_id, input_ids)
 
-        # bonus: if the best token is not valid, block it and get the next best token
+        # bonus: if the token is not valid block it and get the next best token
         retried = False
         while json_state_machine.is_valid_token(next_token_text) is False:
             retried = True
             logits_processor.block_token({next_token_id})
             next_token_id = logits_processor.get_best_token()
             next_token_text = _decode_token_id(llm, next_token_id, input_ids)
-        
+
         if visualizer is not None:
             allowed_count = (
                 len(allowed_token_texts)
@@ -156,7 +156,7 @@ def generate_text(
         generated.append(next_token_id)
         json_output.append(next_token_id)
 
-        if json_state_machine.get_state().name == 'VALUE_OBJECT_CLOSE':
+        if json_state_machine.get_state().name == 'OBJECT_END':
             break
 
     final_text = llm.decode_text(input_ids.new_tensor(json_output))

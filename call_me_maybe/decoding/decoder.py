@@ -9,6 +9,7 @@ from call_me_maybe.llm.vocab import VocabularyManager
 from call_me_maybe.models.function import FunctionDefinition
 from call_me_maybe.decoding.constraints import ConstraintEngine
 from call_me_maybe.decoding.json_state_machine import JSONStateMachine
+from call_me_maybe.visualization.visualizer import GenerationVisualizer
 
 
 def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
@@ -87,7 +88,8 @@ def generate_text(
         system_prompt: str,
         prefix_prompt: str,
         functions: list[FunctionDefinition],
-        max_steps: int
+        max_steps: int,
+        visualizer: GenerationVisualizer | None = None
         ) -> str:
     """Generate a constrained JSON compltion for the provided system_prompt."""
 
@@ -103,6 +105,9 @@ def generate_text(
         constrained_engein=constrained_decoding
     )
     json_state_machine.state = JSONState.COMMA
+
+    if visualizer is not None:
+        visualizer.start(system_prompt + prefix_prompt)
 
     json_output = []
     for _ in range(max_steps):
@@ -126,16 +131,36 @@ def generate_text(
         next_token_text = _decode_token_id(llm, next_token_id, input_ids)
 
         # bonus: if the best token is not valid, block it and get the next best token
+        retried = False
         while json_state_machine.is_valid_token(next_token_text) is False:
+            retried = True
             logits_processor.block_token({next_token_id})
             next_token_id = logits_processor.get_best_token()
             next_token_text = _decode_token_id(llm, next_token_id, input_ids)
+        
+        if visualizer is not None:
+            allowed_count = (
+                len(allowed_token_texts)
+                if allowed_token_texts is not None
+                else None
+            )
+            visualizer.step_event(
+                state_name=json_state_machine.get_state().name,
+                raw_best_token=current_best_token,
+                allowed_count=allowed_count,
+                final_token=next_token_text,
+                was_masked=(current_best_token != next_token_text),
+                retried=retried,
+            )
 
         generated.append(next_token_id)
         json_output.append(next_token_id)
 
-        if json_state_machine.get_state().name == 'OBJECT_END':
+        if json_state_machine.get_state().name == 'VALUE_OBJECT_CLOSE':
             break
-        print(f"token_text: {next_token_text}")
+
+    final_text = llm.decode_text(input_ids.new_tensor(json_output))
+    if visualizer is not None:
+        visualizer.finish(prefix_prompt + final_text, success=True)
 
     return llm.decode_text(input_ids.new_tensor(json_output))

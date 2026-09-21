@@ -3,13 +3,13 @@ install:
 
 
 run:
-	uv run python -m call_me_maybe
+	uv run python -m src
 
 run-visual:
-	uv run python -m call_me_maybe --visualize
+	uv run python -m src --visualize
 
 debug:
-	uv run python -m pdb -m call_me_maybe.main
+	uv run python -m pdb -m src
 
 clean:
 	find . -name '__pycache__' -exec rm -rf {} +

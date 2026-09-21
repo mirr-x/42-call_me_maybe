@@ -27,7 +27,7 @@ Install dependencies and run:
 
 ```bash
 uv sync
-uv run python -m call_me_maybe --functions_definition data/input/functions_definition.json --input data/input/function_calling_tests.json --output data/output/function_calling_results.json
+uv run python -m src --functions_definition data/input/functions_definition.json --input data/input/function_calling_tests.json --output data/output/function_calling_results.json
 ```
 
 You can also use the Makefile shortcuts:
@@ -42,7 +42,7 @@ make run
 The `--model` flag accepts any Hugging Face model identifier compatible with the `llm_sdk` interface. The default is `Qwen/Qwen3-0.6B`.
 
 ```bash
-uv run python -m call_me_maybe --model Qwen/Qwen3-1.7B
+uv run python -m src --model Qwen/Qwen3-1.7B
 ```
 
 Both `Qwen/Qwen3-0.6B` and `Qwen/Qwen3-1.7B` have been tested and produce correct output with constrained decoding. Larger models tend to assign higher logits to sensible continuations, which means constraints are triggered less often, but the output schema remains identical.
@@ -118,19 +118,19 @@ The main verification steps are:
 Default model:
 
 ```bash
-uv run python -m call_me_maybe
+uv run python -m src
 ```
 
 Custom model:
 
 ```bash
-uv run python -m call_me_maybe --model Qwen/Qwen3-1.7B
+uv run python -m src --model Qwen/Qwen3-1.7B
 ```
 
 All options:
 
 ```bash
-uv run python -m call_me_maybe \
+uv run python -m src \
   --model Qwen/Qwen3-1.7B \
   --functions_definition data/input/functions_definition.json \
   --input data/input/function_calling_tests.json \

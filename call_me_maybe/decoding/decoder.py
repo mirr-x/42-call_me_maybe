@@ -1,6 +1,6 @@
 """Constrained decoding engine"""
 
-import torch
+import numpy as np
 
 from call_me_maybe.llm.model import LLModel
 from call_me_maybe._types._types import JSONState
@@ -25,8 +25,7 @@ def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
 
     allowed_token_ids: set[int] = set()
     for token_text in token_texts:
-        token_ids_tensor = llm.encode_text(token_text)
-        token_ids = token_ids_tensor[0].tolist()
+        token_ids = _encoded_token_ids(llm, token_text)
         if len(token_ids) == 1:
             allowed_token_ids.add(token_ids[0])
     return allowed_token_ids
@@ -35,16 +34,16 @@ def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
 def _decode_token_id(
         llm: LLModel,
         token_id: int,
-        tensor_template: torch.Tensor) -> str:
+        tensor_template: np.ndarray) -> str:
     """Decode a single token ID into text using a tensor template."""
 
-    token_tensor = tensor_template.new_tensor([token_id])
+    token_tensor = np.asarray([token_id], dtype=np.int64)
     return llm.decode_text(token_tensor)
 
 
 def _build_logits_processor(
         llm: LLModel,
-        input_ids: torch.Tensor,
+        input_ids: np.ndarray,
         generated: list[int]) -> LogitsProcessor:
     """Create a logits processor for the current generation step."""
 
@@ -52,14 +51,14 @@ def _build_logits_processor(
         generated
     )
     return LogitsProcessor(
-        logits=input_ids.new_tensor(logits_for_next_token, dtype=torch.float32)
+        logits=np.asarray(logits_for_next_token, dtype=np.float64)
     )
 
 
 def _decode_current_best_token(
         llm: LLModel,
         logits_processor: LogitsProcessor,
-        tensor_template: torch.Tensor) -> str:
+        tensor_template: np.ndarray) -> str:
     """Decode the highest-scoring token from the current logits."""
 
     best_token_id: int = logits_processor.get_best_token()
@@ -96,7 +95,7 @@ def generate_text(
     input_ids = llm.encode_text(system_prompt + prefix_prompt)
 
     generated = input_ids[0].tolist()
-    vocab_manager = VocabularyManager(llm.get_vocab_path())
+    vocab_manager = _load_vocabulary(llm.get_vocab_path())
     constrained_decoding = ConstraintEngine(
         functions=functions,
         vocab_manager=vocab_manager
@@ -159,8 +158,8 @@ def generate_text(
         if json_state_machine.get_state().name == 'OBJECT_END':
             break
 
-    final_text = llm.decode_text(input_ids.new_tensor(json_output))
+    final_text = llm.decode_text(np.asarray(json_output, dtype=np.int64))
     if visualizer is not None:
         visualizer.finish(prefix_prompt + final_text, success=True)
 
-    return llm.decode_text(input_ids.new_tensor(json_output))
+    return llm.decode_text(np.asarray(json_output, dtype=np.int64))

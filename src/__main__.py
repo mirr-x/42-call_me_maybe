@@ -9,4 +9,3 @@ if __name__ == "__main__":
     main()
     end_time = time.time()
     print(f"Execution time: {(end_time - start_time) / 60:.2f} minutes")
-

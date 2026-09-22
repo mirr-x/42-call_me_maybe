@@ -3,7 +3,7 @@ adapter with convenience methods for encoding, decoding and accessing
 tokenizer/vocab file paths.
 """
 
-import torch
+import numpy as np
 
 from call_me_maybe.parsers import _errors
 from llm_sdk import Small_LLM_Model
@@ -42,7 +42,7 @@ class LLModel:
             msg = f"Configuration error during model load: {e}"
             raise _errors.LLmModelLoadError(msg) from e
 
-    def encode_text(self, text: str) -> torch.Tensor:
+    def encode_text(self, text: str) -> np.ndarray:
         """Encode text into a tensor of token ids.
 
         Args:
@@ -52,20 +52,21 @@ class LLModel:
             _errors.LLmModelEncodeError: If encoding fails for any reason.
 
         Returns:
-            A torch.Tensor containing token ids representing the input text.
+            A NumPy array containing token ids representing the input text.
         """
 
         try:
-            return self.small_llm_model.encode(text=text)
+            encoded = self.small_llm_model.encode(text=text)
+            return np.asarray(encoded.tolist(), dtype=np.int64)
         except Exception as e:
             msg = f"Unexpected error during encoding: {e}"
             raise _errors.LLmModelEncodeError(msg) from e
 
-    def decode_text(self, token_ids_tensor: torch.Tensor) -> str:
-        """Decode a tensor of token ids back to a string.
+    def decode_text(self, token_ids_tensor: np.ndarray) -> str:
+        """Decode a NumPy array of token ids back to a string.
 
         Args:
-            token_ids_tensor: Tensor containing token ids to decode.
+            token_ids_tensor: NumPy array containing token ids to decode.
 
         Raises:
             _errors.LLmModelDecodeError: If decoding fails for any reason.
@@ -75,7 +76,7 @@ class LLModel:
         """
 
         try:
-            return self.small_llm_model.decode(ids=token_ids_tensor)
+            return self.small_llm_model.decode(ids=token_ids_tensor.tolist())
         except Exception as e:
             msg = f"Unexpected error during decoding: {e}"
             raise _errors.LLmModelDecodeError(msg) from e

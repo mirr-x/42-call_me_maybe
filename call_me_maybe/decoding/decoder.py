@@ -12,6 +12,18 @@ from call_me_maybe.decoding.json_state_machine import JSONStateMachine
 from call_me_maybe.visualization.visualizer import GenerationVisualizer
 
 
+def _encoded_token_ids(llm: LLModel, token_text: str) -> list[int]:
+    """Encode a token text into token IDs."""
+
+    return np.asarray(llm.encode_text(token_text), dtype=np.int64).reshape(-1).tolist()
+
+
+def _load_vocabulary(vocab_path: str) -> VocabularyManager:
+    """Load the vocabulary manager from a vocab file path."""
+
+    return VocabularyManager(vocab_path)
+
+
 def token_texts_to_ids(llm: LLModel, token_texts: set[str]) -> set[int]:
     """Convert token text strings to single-token IDs.
 
@@ -133,7 +145,7 @@ def generate_text(
         retried = False
         while json_state_machine.is_valid_token(next_token_text) is False:
             retried = True
-            logits_processor.block_token({next_token_id})
+            logits_processor.block_token(next_token_id)
             next_token_id = logits_processor.get_best_token()
             next_token_text = _decode_token_id(llm, next_token_id, input_ids)
 

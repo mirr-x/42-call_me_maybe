@@ -1,14 +1,14 @@
 """Logits processing utilities for language model output."""
 
-import torch
+import numpy as np
 
 
 class LogitsProcessor:
     """Processor for handling logits arrays from language models."""
 
-    def __init__(self, logits: torch.Tensor) -> None:
+    def __init__(self, logits: np.ndarray) -> None:
 
-        self.logits: torch.Tensor = logits
+        self.logits: np.ndarray = logits
 
     def get_best_token(self) -> int:
         """Get the token ID with the highest logit score.
@@ -17,7 +17,7 @@ class LogitsProcessor:
             int: The index of the token with the maximum logit value
         """
 
-        return torch.argmax(self.logits).item()
+        return int(np.argmax(self.logits))
 
     def get_top_k_tokens(self, k: int) -> list[int]:
         """Get the token IDs with the top k highest logit scores.
@@ -29,9 +29,7 @@ class LogitsProcessor:
             list[int]: List of token IDs sorted by logit score in descend order
         """
 
-        _, top_k_indices = torch.topk(self.logits, k)
-
-        return top_k_indices.tolist()
+        return np.argsort(self.logits)[-k:][::-1].tolist()
 
     def get_token_score(self, token_id: int) -> float:
         """Get the logit score for a specific token.
@@ -43,7 +41,7 @@ class LogitsProcessor:
             float: The logit score of the specified token
         """
 
-        return self.logits[token_id].item()
+        return float(self.logits[token_id])
 
     def mask_logits(self, allowed_tokens: set[int]) -> None:
         """Apply masking to tokens by setting logits for disallowed
@@ -56,15 +54,11 @@ class LogitsProcessor:
             None: The logits tensor is modified in place.
         """
 
-        allowed = self.logits.new_tensor(
-            list(allowed_tokens),
-            dtype=torch.long
-        )
-
-        mask = torch.ones_like(self.logits, dtype=torch.bool)
-        mask[allowed] = False
-
-        self.logits.masked_fill_(mask, float("-inf"))
+        mask = np.ones(self.logits.shape, dtype=bool)
+        valid_tokens = [token_id for token_id in allowed_tokens
+                        if 0 <= token_id < len(self.logits)]
+        mask[valid_tokens] = False
+        self.logits[mask] = -np.inf
 
     def block_token(self, token_id: int) -> None:
         """Block a specific token by setting its logit to -inf.

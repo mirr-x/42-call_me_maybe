@@ -3,14 +3,14 @@ name = "call-me-maybe"
 version = "0.1.0"
 description = "Function-calling project using constrained decoding"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
-    "numpy>=2.4.6",
-    "pydantic>=2.13.4",
+    "numpy",
+    "pydantic",
     "llm-sdk",
-    "accelerate>=1.14.0",
-    "wrapt>=2.2.2",
+    "accelerate",
+    "wrapt",
 ]
 
 [tool.uv.sources]
-llm-sdk = { path = "./llm_sdk", editable = true }
+llm-sdk = { path = "./llm_sdk" }

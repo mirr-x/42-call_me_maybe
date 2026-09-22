@@ -127,6 +127,10 @@ def main() -> None:
 
             json_output.append(json_obj)
 
+        output_directory = os.path.dirname(output_file)
+        if output_directory:
+            os.makedirs(output_directory, exist_ok=True)
+
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(json_output, f, indent=4)
 

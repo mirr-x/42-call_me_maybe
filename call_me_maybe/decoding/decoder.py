@@ -15,7 +15,8 @@ from call_me_maybe.visualization.visualizer import GenerationVisualizer
 def _encoded_token_ids(llm: LLModel, token_text: str) -> list[int]:
     """Encode a token text into token IDs."""
 
-    return np.asarray(llm.encode_text(token_text), dtype=np.int64).reshape(-1).tolist()
+    return np.asarray(
+        llm.encode_text(token_text), dtype=np.int64).reshape(-1).tolist()
 
 
 def _load_vocabulary(vocab_path: str) -> VocabularyManager:

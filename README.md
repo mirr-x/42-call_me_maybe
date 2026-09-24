@@ -49,6 +49,8 @@ Both `Qwen/Qwen3-0.6B` and `Qwen/Qwen3-1.7B` have been tested and produce correc
 
 ## Algorithm
 
+![function calling floq image](https://raw.githubusercontent.com/mirr-x/42-CC-1337/71a2653d606f0588b47f3cab6d46a40cfb52aae8/images/function-calling-flow.jpg)
+
 The generation loop is a constrained decoding pipeline:
 
 ```text
